@@ -32,6 +32,7 @@ function emptyMarks() {
 type Cell = {
   digit: string;
   marks: Marks;
+  prefilled: boolean;
 };
 
 type Cells = {
@@ -42,9 +43,7 @@ type Cells = {
 type BoardStore = {
   cells: Cells;
   time: number;
-  newGrid: string;
-  setNewGrid: (grid: string) => void;
-  loadGrid: () => void;
+  loadGrid: (newGrid: string) => void;
   toggleMark: (cell: string, mark: number) => void;
   setCellDigit: (cell: string, digit: number) => void;
 };
@@ -52,18 +51,10 @@ type BoardStore = {
 export const useBoardStore = create<BoardStore>((set) => ({
   cells: Object.fromEntries(C.CELLS.map((cellId) => [cellId, {} as Cell])),
   time: 0,
-  newGrid: "",
-  setNewGrid(grid) {
+  loadGrid(newGrid: string) {
     set(
       produce((draft) => {
-        draft.newGrid = grid;
-      })
-    );
-  },
-  loadGrid() {
-    set(
-      produce((draft) => {
-        const grid = draft.newGrid
+        const grid = newGrid
           .replaceAll(".", "0")
           .replaceAll("-", "0")
           .split("")
@@ -75,7 +66,11 @@ export const useBoardStore = create<BoardStore>((set) => ({
         }
 
         for (const [i, v] of grid.entries()) {
-          draft.cells[C.CELLS[i]] = { digit: v, marks: emptyMarks() } as Cell;
+          draft.cells[C.CELLS[i]] = {
+            digit: v,
+            marks: emptyMarks(),
+            prefilled: v !== "0",
+          } as Cell;
         }
       })
     );

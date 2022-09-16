@@ -31,15 +31,24 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
 }
 
 function Cell({ cell }: { cell: string }) {
-  const digit = useBoardStore((state) => state.cells[cell].digit);
+  const [digit, prefilled] = useBoardStore(
+    (state) => [state.cells[cell].digit, state.cells[cell].prefilled],
+    shallow
+  );
   return (
-    <div className="flex h-10 w-10 items-center justify-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent lg:h-24 lg:w-24">
+    <div className="flex h-10 w-10 items-center justify-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent lg:h-24 lg:w-24 ">
       {digit !== "0" ? (
-        <span className="text-3xl text-zinc-300 lg:text-5xl">{digit}</span>
+        <span
+          className={`pointer-events-none select-none text-3xl ${
+            prefilled ? "text-zinc-300" : "text-blue-500"
+          } lg:text-5xl`}
+        >
+          {digit}
+        </span>
       ) : (
         <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-0 p-1 text-center">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n, i) => (
-            <Clickable key={cell + "_" + i} cell={cell} number={n} />
+            <Clickable key={`${cell}_${i}`} cell={cell} number={n} />
           ))}
         </div>
       )}
@@ -47,7 +56,7 @@ function Cell({ cell }: { cell: string }) {
   );
 }
 
-function S({ list }: { list: string[] }) {
+function SubGrid({ list }: { list: string[] }) {
   return (
     <div className="grid grid-cols-3 grid-rows-3 gap-0 border-[1px] border-zinc-600">
       {list.map((cell) => (
@@ -57,7 +66,7 @@ function S({ list }: { list: string[] }) {
   );
 }
 
-const groups = [
+const subGrids = [
   ["A", "B", "C"],
   ["D", "E", "F"],
   ["G", "H", "I"],
@@ -73,8 +82,8 @@ function Board() {
   return (
     <div className="border-2 border-zinc-600 drop-shadow-2xl">
       <div className="grid grid-cols-3 grid-rows-3 gap-0 bg-zinc-800">
-        {groups.map((s, i) => (
-          <S key={i} list={s} />
+        {subGrids.map((s, i) => (
+          <SubGrid key={i} list={s} />
         ))}
       </div>
     </div>
