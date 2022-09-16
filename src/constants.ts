@@ -1,4 +1,4 @@
-import {cross} from "@/utilFuncs";
+import { cross } from "@/utilFuncs";
 
 type Constants = {
   ALLOWED_DIGITS: string;

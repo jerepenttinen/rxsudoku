@@ -4,7 +4,7 @@ import { cross } from "@/utilFuncs";
 import { useBoardStore } from "@/boardStore";
 import shallow from "zustand/shallow";
 
-function Clickable({cell, number}: {cell: string, number: number}) {
+function Clickable({ cell, number }: { cell: string; number: number }) {
   const [toggleMark, setCellDigit, mark] = useBoardStore(
     (state) => [
       state.toggleMark,
@@ -21,7 +21,7 @@ function Clickable({cell, number}: {cell: string, number: number}) {
     <div
       className={`${
         mark ? "text-zinc-300" : "text-transparent hover:text-stone-400"
-      } hover:bg-zinc-700 p-1`}
+      } p-1 hover:bg-zinc-700`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
@@ -30,16 +30,14 @@ function Clickable({cell, number}: {cell: string, number: number}) {
   );
 }
 
-function Cell({cell}: {cell: string}) {
+function Cell({ cell }: { cell: string }) {
   const digit = useBoardStore((state) => state.cells[cell].digit);
   return (
-    <div className="h-10 w-10 lg:h-24 lg:w-24 flex justify-center items-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent">
+    <div className="flex h-10 w-10 items-center justify-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent lg:h-24 lg:w-24">
       {digit !== "0" ? (
-        <span className="text-3xl lg:text-5xl text-zinc-300">
-          {digit}
-        </span>
+        <span className="text-3xl text-zinc-300 lg:text-5xl">{digit}</span>
       ) : (
-        <div className="grid gap-0 grid-rows-3 grid-cols-3 p-1 w-full h-full text-center">
+        <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-0 p-1 text-center">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n, i) => (
             <Clickable key={cell + "_" + i} cell={cell} number={n} />
           ))}
@@ -49,9 +47,9 @@ function Cell({cell}: {cell: string}) {
   );
 }
 
-function S({list}: {list: string[]}) {
+function S({ list }: { list: string[] }) {
   return (
-    <div className="grid gap-0 grid-rows-3 grid-cols-3 border-[1px] border-zinc-600">
+    <div className="grid grid-cols-3 grid-rows-3 gap-0 border-[1px] border-zinc-600">
       {list.map((cell) => (
         <Cell key={cell} cell={cell} />
       ))}
@@ -74,7 +72,7 @@ const groups = [
 function Board() {
   return (
     <div className="border-2 border-zinc-600 drop-shadow-2xl">
-      <div className="grid gap-0 grid-rows-3 grid-cols-3 bg-zinc-800">
+      <div className="grid grid-cols-3 grid-rows-3 gap-0 bg-zinc-800">
         {groups.map((s, i) => (
           <S key={i} list={s} />
         ))}

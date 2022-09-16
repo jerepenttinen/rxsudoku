@@ -11,12 +11,12 @@ function LoadBoard() {
       <input
         type="text"
         placeholder="grid"
-        className="bg-zinc-800 text-zinc-200 border-2 appearance-none border-transparent p-2 my-4 mr-3 w-full"
+        className="my-4 mr-3 w-full appearance-none border-2 border-transparent bg-zinc-800 p-2 text-zinc-200"
         onChange={(evt) => setNewGrid(evt.target.value)}
       ></input>
       <button
         onClick={loadGrid}
-        className="p-2 my-4 bg-zinc-800 hover:bg-zinc-700 border-2 border-transparent hover:border-blue-500 text-zinc-200 w-32"
+        className="my-4 w-32 border-2 border-transparent bg-zinc-800 p-2 text-zinc-200 hover:border-blue-500 hover:bg-zinc-700"
       >
         Load
       </button>
