@@ -2,9 +2,36 @@ import create from "zustand";
 import produce from "immer";
 import C from "@/constants";
 
+type Marks = {
+  1: boolean;
+  2: boolean;
+  3: boolean;
+  4: boolean;
+  5: boolean;
+  6: boolean;
+  7: boolean;
+  8: boolean;
+  9: boolean;
+  [num: number]: boolean;
+}
+
+function emptyMarks() {
+  return {
+    1: false,
+    2: false,
+    3: false,
+    4: false,
+    5: false,
+    6: false,
+    7: false,
+    8: false,
+    9: false,
+  }
+}
+
 type Cell = {
   digit: string;
-  marks: string;
+  marks: Marks;
 }
 
 type Cells = {
@@ -18,6 +45,8 @@ type BoardStore = {
   newGrid: string;
   setNewGrid: (grid: string) => void;
   loadGrid: () => void;
+  toggleMark: (cell: string, mark: number) => void;
+  setCellDigit: (cell: string, digit: number) => void;
 }
 
 export const useBoardStore = create<BoardStore>((set) => ({
@@ -48,9 +77,19 @@ export const useBoardStore = create<BoardStore>((set) => ({
         }
 
         for (const [i, v] of grid.entries()) {
-          draft.cells[C.CELLS[i]] = {digit: v, marks: ""} as Cell;
+          draft.cells[C.CELLS[i]] = {digit: v, marks: emptyMarks()} as Cell;
         }
       })
     );
+  },
+  toggleMark(cell, mark) {
+    set(produce((draft) => {
+      draft.cells[cell].marks[mark] = !draft.cells[cell].marks[mark];
+    }));
+  },
+  setCellDigit(cell, digit) {
+    set(produce(draft => {
+      draft.cells[cell].digit = digit.toString();
+    }))
   },
 }));

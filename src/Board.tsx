@@ -1,19 +1,26 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import { useEffect, useState } from "react";
 import { cross } from "@/utilFuncs";
 import { useBoardStore } from "@/boardStore";
+import shallow from "zustand/shallow";
 
-function Clickable({number, setUserNumber}: {number: number, setUserNumber: (arg0: string) => void}) {
-  const [show, setShow] = useState(false);
+function Clickable({cell, number}: {cell: string, number: number}) {
+  const [toggleMark, setCellDigit, mark] = useBoardStore(
+    (state) => [
+      state.toggleMark,
+      state.setCellDigit,
+      state.cells[cell].marks[number],
+    ],
+    shallow
+  );
 
-  const handleClick = () => setShow(show => !show);
-  const handleDoubleClick = () => setUserNumber(number.toString());
+  const handleClick = () => toggleMark(cell, number);
+  const handleDoubleClick = () => setCellDigit(cell, number);
 
   return (
     <div
       className={`${
-        show ? "text-zinc-300" : "text-transparent hover:text-stone-400"
+        mark ? "text-zinc-300" : "text-transparent hover:text-stone-400"
       } hover:bg-zinc-700 p-1`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
@@ -24,22 +31,17 @@ function Clickable({number, setUserNumber}: {number: number, setUserNumber: (arg
 }
 
 function Cell({cell}: {cell: string}) {
-  const boardStore = useBoardStore();
-  const [userNumber, setUserNumber] = useState("");
-  useEffect(
-    () => setUserNumber(boardStore.cells[cell].digit),
-    [boardStore.cells[cell].digit]
-  );
+  const digit = useBoardStore((state) => state.cells[cell].digit);
   return (
     <div className="h-10 w-10 lg:h-24 lg:w-24 flex justify-center items-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent">
-      {userNumber !== "0" ? (
-        <span className={`text-3xl lg:text-5xl ${boardStore.cells[cell].digit === userNumber ? "text-zinc-300" : "text-amber-700"}`}>
-          {userNumber}
+      {digit !== "0" ? (
+        <span className="text-3xl lg:text-5xl text-zinc-300">
+          {digit}
         </span>
       ) : (
         <div className="grid gap-0 grid-rows-3 grid-cols-3 p-1 w-full h-full text-center">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n, i) => (
-            <Clickable key={i} number={n} setUserNumber={setUserNumber} />
+            <Clickable key={cell + "_" + i} cell={cell} number={n} />
           ))}
         </div>
       )}
@@ -50,8 +52,8 @@ function Cell({cell}: {cell: string}) {
 function S({list}: {list: string[]}) {
   return (
     <div className="grid gap-0 grid-rows-3 grid-cols-3 border-[1px] border-zinc-600">
-      {list.map((cell, i) => (
-        <Cell key={i} cell={cell} />
+      {list.map((cell) => (
+        <Cell key={cell} cell={cell} />
       ))}
     </div>
   );
@@ -70,18 +72,6 @@ const groups = [
 );
 
 function Board() {
-  const b = [
-    [4, 0, 3, 6, 5, 1, 0, 9, 0],
-    [8, 0, 1, 0, 0, 9, 0, 0, 0],
-    [9, 0, 0, 8, 0, 3, 0, 0, 0],
-    [0, 0, 0, 0, 0, 6, 2, 0, 0],
-    [0, 6, 5, 0, 0, 0, 0, 0, 3],
-    [0, 0, 0, 3, 4, 0, 7, 1, 0],
-    [5, 2, 0, 1, 0, 0, 0, 0, 0],
-    [7, 9, 0, 0, 0, 0, 0, 0, 0],
-    [0, 3, 0, 5, 0, 0, 6, 9, 4],
-  ];
-  useEffect(() => console.log(groups), []);
   return (
     <div className="border-2 border-zinc-600 drop-shadow-2xl">
       <div className="grid gap-0 grid-rows-3 grid-cols-3 bg-zinc-800">
