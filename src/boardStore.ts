@@ -15,7 +15,7 @@ type Marks = {
   [num: number]: boolean;
 };
 
-function emptyMarks() {
+function emptyMarks(): Marks {
   return {
     1: false,
     2: false,
@@ -33,6 +33,7 @@ type Cell = {
   digit: string;
   marks: Marks;
   prefilled: boolean;
+  highlighted: boolean;
 };
 
 type Cells = {
@@ -46,6 +47,8 @@ type BoardStore = {
   loadGrid: (newGrid: string) => void;
   toggleMark: (cell: string, mark: number) => void;
   setCellDigit: (cell: string, digit: number) => void;
+  highlightedCell: string;
+  setHighlightedCell: (cell: string) => void;
 };
 
 export const useBoardStore = create<BoardStore>((set) => ({
@@ -70,6 +73,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
             digit: v,
             marks: emptyMarks(),
             prefilled: v !== "0",
+            highlighted: false,
           } as Cell;
         }
       })
@@ -86,6 +90,18 @@ export const useBoardStore = create<BoardStore>((set) => ({
     set(
       produce((draft) => {
         draft.cells[cell].digit = digit.toString();
+      })
+    );
+  },
+  highlightedCell: "A1",
+  setHighlightedCell(cell) {
+    set(
+      produce((draft) => {
+        if (draft.highlightedCell !== undefined) {
+          draft.cells[draft.highlightedCell].highlighted = false;
+        }
+        draft.cells[cell].highlighted = true;
+        draft.highlightedCell = cell;
       })
     );
   },

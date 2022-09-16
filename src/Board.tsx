@@ -31,12 +31,23 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
 }
 
 function Cell({ cell }: { cell: string }) {
-  const [digit, prefilled] = useBoardStore(
-    (state) => [state.cells[cell].digit, state.cells[cell].prefilled],
+  const [digit, prefilled, highlighted, setHighlightedCell] = useBoardStore(
+    (state) => [
+      state.cells[cell].digit,
+      state.cells[cell].prefilled,
+      state.cells[cell].highlighted,
+      state.setHighlightedCell,
+    ],
     shallow
   );
+
   return (
-    <div className="flex h-10 w-10 items-center justify-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent lg:h-24 lg:w-24 ">
+    <div
+      onClick={() => setHighlightedCell(cell)}
+      className={`${
+        highlighted ? "ring-4 ring-inset ring-purple-500" : ""
+      } flex h-10 w-10 items-center justify-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent lg:h-24 lg:w-24`}
+    >
       {digit !== "0" ? (
         <span
           className={`pointer-events-none select-none text-3xl ${
