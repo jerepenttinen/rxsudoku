@@ -47,8 +47,8 @@ function Cell({ cell }: { cell: string }) {
     <div
       onClick={() => setHighlightedCell(cell)}
       className={`${
-        highlighted && "ring-4 ring-inset ring-purple-500"
-      } flex aspect-square items-center justify-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent`}
+        highlighted && "z-10 ring-2 ring-inset ring-blue-500"
+      } flex aspect-square items-center justify-center outline outline-1 outline-zinc-600`}
     >
       {digit !== "0" ? (
         <span
@@ -71,7 +71,7 @@ function Cell({ cell }: { cell: string }) {
 
 function SubGrid({ list }: { list: string[] }) {
   return (
-    <div className="grid grid-cols-3 grid-rows-3 gap-0 border-[1px] border-zinc-600">
+    <div className="grid grid-cols-3 grid-rows-3 gap-[1px] border-2 border-zinc-600">
       {list.map((cell) => (
         <Cell key={cell} cell={cell} />
       ))}
@@ -93,8 +93,8 @@ const subGrids = [
 
 function Board() {
   return (
-    <div className="aspect-square border-2 border-zinc-600 drop-shadow-2xl">
-      <div className="grid h-[80vmin] grid-cols-3 grid-rows-3 gap-0 bg-zinc-800 text-center">
+    <div className="aspect-square bg-zinc-800 drop-shadow-2xl">
+      <div className="grid h-[80vmin] grid-cols-3 grid-rows-3 text-center">
         {subGrids.map((s, i) => (
           <SubGrid key={"S" + i} list={s} />
         ))}
