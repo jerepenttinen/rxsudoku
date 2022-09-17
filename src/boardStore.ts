@@ -54,9 +54,9 @@ type BoardStore = {
 export const useBoardStore = create<BoardStore>((set) => ({
   cells: Object.fromEntries(C.CELLS.map((cellId) => [cellId, {} as Cell])),
   time: 0,
-  loadGrid(newGrid: string) {
+  loadGrid(newGrid) {
     set(
-      produce((draft) => {
+      produce((draft: BoardStore) => {
         const grid = newGrid
           .replaceAll(".", "0")
           .replaceAll("-", "0")
@@ -81,14 +81,14 @@ export const useBoardStore = create<BoardStore>((set) => ({
   },
   toggleMark(cell, mark) {
     set(
-      produce((draft) => {
+      produce((draft: BoardStore) => {
         draft.cells[cell].marks[mark] = !draft.cells[cell].marks[mark];
       })
     );
   },
   setCellDigit(cell, digit) {
     set(
-      produce((draft) => {
+      produce((draft: BoardStore) => {
         draft.cells[cell].digit = digit.toString();
       })
     );
@@ -96,7 +96,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
   highlightedCell: "A1",
   setHighlightedCell(cell) {
     set(
-      produce((draft) => {
+      produce((draft: BoardStore) => {
         if (draft.highlightedCell !== undefined) {
           draft.cells[draft.highlightedCell].highlighted = false;
         }

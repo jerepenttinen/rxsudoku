@@ -45,7 +45,7 @@ function Cell({ cell }: { cell: string }) {
     <div
       onClick={() => setHighlightedCell(cell)}
       className={`${
-        highlighted ? "ring-4 ring-inset ring-purple-500" : ""
+        highlighted && "ring-4 ring-inset ring-purple-500"
       } flex h-10 w-10 items-center justify-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent lg:h-24 lg:w-24`}
     >
       {digit !== "0" ? (
@@ -94,7 +94,7 @@ function Board() {
     <div className="border-2 border-zinc-600 drop-shadow-2xl">
       <div className="grid grid-cols-3 grid-rows-3 gap-0 bg-zinc-800">
         {subGrids.map((s, i) => (
-          <SubGrid key={i} list={s} />
+          <SubGrid key={"S" + i} list={s} />
         ))}
       </div>
     </div>

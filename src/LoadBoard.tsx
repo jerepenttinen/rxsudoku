@@ -1,12 +1,11 @@
+import { useRef, FormEvent } from "react";
 import { useBoardStore } from "@/boardStore";
-import * as React from "react";
-import { useRef } from "react";
 
 function LoadBoard() {
   const loadGrid = useBoardStore((state) => state.loadGrid);
   const inputBox = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = (evt: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
     if (inputBox.current !== null) {
       loadGrid(inputBox.current.value);
