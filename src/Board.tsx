@@ -20,8 +20,10 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
   return (
     <div
       className={`${
-        mark ? "text-zinc-300" : "text-transparent hover:text-stone-400"
-      } aspect-square h-full w-full hover:bg-zinc-700`}
+        mark
+          ? "text-zinc-700 dark:text-zinc-300"
+          : "text-transparent hover:text-stone-500"
+      } aspect-square h-full w-full hover:bg-zinc-200`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
@@ -48,12 +50,12 @@ function Cell({ cell }: { cell: string }) {
       onClick={() => setHighlightedCell(cell)}
       className={`${
         highlighted && "z-10 ring-2 ring-inset ring-blue-500"
-      } flex aspect-square items-center justify-center outline outline-1 outline-zinc-600`}
+      }  flex aspect-square items-center justify-center outline outline-1 outline-zinc-900 dark:outline-zinc-600`}
     >
       {digit !== "0" ? (
         <span
           className={`pointer-events-none select-none ${
-            prefilled ? "text-zinc-300" : "text-blue-500"
+            prefilled ? "text-zinc-900 dark:text-zinc-300" : "text-blue-500"
           } text-[min(5.5lvh,5.5lvw)]`}
         >
           {digit}
@@ -71,7 +73,7 @@ function Cell({ cell }: { cell: string }) {
 
 function SubGrid({ list }: { list: string[] }) {
   return (
-    <div className="grid grid-cols-3 grid-rows-3 gap-[1px] border-2 border-zinc-600">
+    <div className="grid grid-cols-3 grid-rows-3 gap-[1px] border-2 border-zinc-900 dark:border-zinc-600">
       {list.map((cell) => (
         <Cell key={cell} cell={cell} />
       ))}
@@ -93,7 +95,7 @@ const subGrids = [
 
 function Board() {
   return (
-    <div className="aspect-square bg-zinc-800 drop-shadow-2xl">
+    <div className="aspect-square bg-zinc-50 drop-shadow-2xl dark:bg-zinc-800">
       <div className="grid h-[80vmin] grid-cols-3 grid-rows-3 text-center">
         {subGrids.map((s, i) => (
           <SubGrid key={"S" + i} list={s} />
