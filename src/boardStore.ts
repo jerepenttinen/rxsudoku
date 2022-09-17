@@ -47,8 +47,9 @@ type BoardStore = {
   loadGrid: (newGrid: string) => void;
   toggleMark: (cell: string, mark: number) => void;
   setCellDigit: (cell: string, digit: number) => void;
-  highlightedCell: string;
-  setHighlightedCell: (cell: string) => void;
+  currentCell: string;
+  setCurrentCell: (cell: string) => void;
+  removeCurrentCellDigit: () => void;
 };
 
 export const useBoardStore = create<BoardStore>((set) => ({
@@ -93,15 +94,25 @@ export const useBoardStore = create<BoardStore>((set) => ({
       })
     );
   },
-  highlightedCell: "A1",
-  setHighlightedCell(cell) {
+  currentCell: "",
+  setCurrentCell(cell) {
     set(
       produce((draft: BoardStore) => {
-        if (draft.highlightedCell !== undefined) {
-          draft.cells[draft.highlightedCell].highlighted = false;
+        if (draft.cells[draft.currentCell] !== undefined) {
+          draft.cells[draft.currentCell].highlighted = false;
         }
         draft.cells[cell].highlighted = true;
-        draft.highlightedCell = cell;
+        draft.currentCell = cell;
+      })
+    );
+  },
+  removeCurrentCellDigit() {
+    set(
+      produce((draft: BoardStore) => {
+        const cell = draft.cells[draft.currentCell];
+        if (cell !== undefined && !cell.prefilled) {
+          cell.digit = "0";
+        }
       })
     );
   },
