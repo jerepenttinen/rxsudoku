@@ -54,7 +54,7 @@ function Cell({ cell }: { cell: string }) {
         <span
           className={`pointer-events-none select-none ${
             prefilled ? "text-zinc-300" : "text-blue-500"
-          } text-[min(6lvh,6lvw)]`}
+          } text-[min(5.5lvh,5.5lvw)]`}
         >
           {digit}
         </span>
