@@ -41,6 +41,14 @@ type Cells = {
   [cell: string]: Cell;
 };
 
+function setCurrentCell(draft: BoardStore, cell: string) {
+  if (draft.cells[draft.currentCell] !== undefined) {
+    draft.cells[draft.currentCell].highlighted = false;
+  }
+  draft.cells[cell].highlighted = true;
+  draft.currentCell = cell;
+}
+
 type BoardStore = {
   cells: Cells;
   time: number;
@@ -50,6 +58,8 @@ type BoardStore = {
   currentCell: string;
   setCurrentCell: (cell: string) => void;
   setCurrentCellDigit: (digit: string) => void;
+  toggleCurrentCellMark: (mark: number) => void;
+  moveCurrentCell: (direction: string) => void;
 };
 
 export const useBoardStore = create<BoardStore>((set) => ({
@@ -98,11 +108,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
   setCurrentCell(cell) {
     set(
       produce((draft: BoardStore) => {
-        if (draft.cells[draft.currentCell] !== undefined) {
-          draft.cells[draft.currentCell].highlighted = false;
-        }
-        draft.cells[cell].highlighted = true;
-        draft.currentCell = cell;
+        setCurrentCell(draft, cell);
       })
     );
   },
@@ -112,6 +118,62 @@ export const useBoardStore = create<BoardStore>((set) => ({
         const cell = draft.cells[draft.currentCell];
         if (cell !== undefined && !cell.prefilled) {
           cell.digit = digit;
+        }
+      })
+    );
+  },
+  toggleCurrentCellMark(mark) {
+    set(
+      produce((draft: BoardStore) => {
+        const cell = draft.cells[draft.currentCell];
+        if (cell !== undefined && !cell.prefilled) {
+          cell.marks[mark] = !cell.marks[mark];
+        }
+      })
+    );
+  },
+  moveCurrentCell(direction) {
+    set(
+      produce((draft: BoardStore) => {
+        if (draft.currentCell === "") {
+          draft.currentCell = "A1";
+        }
+
+        const [row, col] = draft.currentCell.split("");
+        const colNum = Number.parseInt(col);
+        function setCell(r: string, c: string | number) {
+          console.log(r + c);
+          setCurrentCell(draft, r + c);
+        }
+
+        switch (direction) {
+          case "left": {
+            if (colNum > 1) {
+              setCell(row, colNum - 1);
+            }
+            break;
+          }
+          case "right": {
+            if (colNum < 9) {
+              setCell(row, colNum + 1);
+            }
+            break;
+          }
+          case "up": {
+            if (row > "A") {
+              setCell(String.fromCharCode(row.charCodeAt(0) - 1), col);
+            }
+            break;
+          }
+          case "down": {
+            if (row < "I") {
+              setCell(String.fromCharCode(row.charCodeAt(0) + 1), col);
+            }
+            break;
+          }
+          default: {
+            throw Error("unknown direction: " + direction);
+          }
         }
       })
     );

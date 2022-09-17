@@ -38,7 +38,7 @@ export function HotkeyProvider({ children }: { children: JSX.Element }) {
       event.preventDefault();
       dispatch({
         type: type,
-        key: event.key,
+        key: event.code,
       } as HotkeyAction);
     }, []);
 
@@ -54,14 +54,15 @@ export function HotkeyProvider({ children }: { children: JSX.Element }) {
     };
   }, []);
 
-  // Ran every rerender
   useEffect(() => {
     for (const [hotkey, callback] of hotkeys.callbacks) {
       if (hotkey.split("+").every((key) => hotkeys.keys.has(key))) {
         callback();
+        // Hack! Figure a better way to do overlapping hotkeys! e.g. Shift+A and A
+        break;
       }
     }
-  });
+  }, [hotkeys]);
 
   return (
     <hotkeysDispatchContext.Provider value={dispatch}>
