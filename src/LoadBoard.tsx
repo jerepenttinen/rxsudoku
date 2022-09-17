@@ -13,7 +13,7 @@ function LoadBoard() {
   };
 
   return (
-    <form className="flex w-[80vh] flex-row" onSubmit={handleSubmit}>
+    <form className="flex w-[80vmin] flex-row" onSubmit={handleSubmit}>
       <input
         type="text"
         placeholder="grid"

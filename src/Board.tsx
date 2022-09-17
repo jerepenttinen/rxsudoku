@@ -25,7 +25,7 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
-      <span className="pointer-events-none select-none align-top text-[1.8dvh]">
+      <span className="pointer-events-none select-none align-top text-[min(1.8lvh,1.8lvw)]">
         {number}
       </span>
     </div>
@@ -54,7 +54,7 @@ function Cell({ cell }: { cell: string }) {
         <span
           className={`pointer-events-none select-none ${
             prefilled ? "text-zinc-300" : "text-blue-500"
-          } text-[6dvh]`}
+          } text-[min(6lvh,6lvw)]`}
         >
           {digit}
         </span>
@@ -94,7 +94,7 @@ const subGrids = [
 function Board() {
   return (
     <div className="aspect-square border-2 border-zinc-600 drop-shadow-2xl">
-      <div className="grid h-[80vh] grid-cols-3 grid-rows-3 gap-0 bg-zinc-800 text-center">
+      <div className="grid h-[80vmin] grid-cols-3 grid-rows-3 gap-0 bg-zinc-800 text-center">
         {subGrids.map((s, i) => (
           <SubGrid key={"S" + i} list={s} />
         ))}
