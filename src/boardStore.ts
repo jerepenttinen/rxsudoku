@@ -49,7 +49,7 @@ type BoardStore = {
   setCellDigit: (cell: string, digit: number) => void;
   currentCell: string;
   setCurrentCell: (cell: string) => void;
-  removeCurrentCellDigit: () => void;
+  setCurrentCellDigit: (digit: string) => void;
 };
 
 export const useBoardStore = create<BoardStore>((set) => ({
@@ -106,12 +106,12 @@ export const useBoardStore = create<BoardStore>((set) => ({
       })
     );
   },
-  removeCurrentCellDigit() {
+  setCurrentCellDigit(digit: string) {
     set(
       produce((draft: BoardStore) => {
         const cell = draft.cells[draft.currentCell];
         if (cell !== undefined && !cell.prefilled) {
-          cell.digit = "0";
+          cell.digit = digit;
         }
       })
     );
