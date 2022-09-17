@@ -21,11 +21,13 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
     <div
       className={`${
         mark ? "text-zinc-300" : "text-transparent hover:text-stone-400"
-      } p-1 hover:bg-zinc-700`}
+      } aspect-square h-full w-full hover:bg-zinc-700`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
-      <span className="pointer-events-none select-none">{number}</span>
+      <span className="pointer-events-none select-none align-top text-[1.8dvh]">
+        {number}
+      </span>
     </div>
   );
 }
@@ -46,18 +48,18 @@ function Cell({ cell }: { cell: string }) {
       onClick={() => setHighlightedCell(cell)}
       className={`${
         highlighted && "ring-4 ring-inset ring-purple-500"
-      } flex h-10 w-10 items-center justify-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent lg:h-24 lg:w-24`}
+      } flex aspect-square items-center justify-center border-[1px] border-t-zinc-600 border-l-stone-600 border-b-transparent border-r-transparent`}
     >
       {digit !== "0" ? (
         <span
-          className={`pointer-events-none select-none text-3xl ${
+          className={`pointer-events-none select-none ${
             prefilled ? "text-zinc-300" : "text-blue-500"
-          } lg:text-5xl`}
+          } text-[6dvh]`}
         >
           {digit}
         </span>
       ) : (
-        <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-0 p-1 text-center">
+        <div className="grid aspect-square h-full w-full grid-cols-3 grid-rows-3 gap-0 p-1">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n, i) => (
             <Clickable key={`${cell}_${i}`} cell={cell} number={n} />
           ))}
@@ -91,8 +93,8 @@ const subGrids = [
 
 function Board() {
   return (
-    <div className="border-2 border-zinc-600 drop-shadow-2xl">
-      <div className="grid grid-cols-3 grid-rows-3 gap-0 bg-zinc-800">
+    <div className="aspect-square border-2 border-zinc-600 drop-shadow-2xl">
+      <div className="grid h-[80vh] grid-cols-3 grid-rows-3 gap-0 bg-zinc-800 text-center">
         {subGrids.map((s, i) => (
           <SubGrid key={"S" + i} list={s} />
         ))}

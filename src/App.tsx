@@ -6,10 +6,8 @@ function App() {
   return (
     <HotkeyProvider>
       <main className="flex max-h-full min-h-screen flex-col items-center bg-zinc-900">
-        <div>
-          <LoadBoard />
-          <Board />
-        </div>
+        <LoadBoard />
+        <Board />
       </main>
     </HotkeyProvider>
   );
