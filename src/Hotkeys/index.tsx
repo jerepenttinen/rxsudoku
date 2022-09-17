@@ -17,17 +17,8 @@ function hotkeyReducer(hotkeys: Hotkeys, action: HotkeyAction): Hotkeys {
     }
     case "addKey": {
       hotkeys.keys.add(action.key);
-      console.log(hotkeys.keys);
-      for (const [hotkey, callback] of hotkeys.callbacks) {
-        if (
-          hotkey
-            .split("+")
-            .reduce((acc, key) => acc && hotkeys.keys.has(key), true)
-        ) {
-          callback();
-        }
-      }
-      return hotkeys;
+      // Destructure hotkeys to trigger rerender
+      return { ...hotkeys };
     }
     case "addCallback": {
       hotkeys.callbacks.set(action.key, action.callback);
@@ -40,23 +31,19 @@ function hotkeyReducer(hotkeys: Hotkeys, action: HotkeyAction): Hotkeys {
 }
 
 export function HotkeyProvider({ children }: { children: JSX.Element }) {
-  const [, dispatch] = useReducer(hotkeyReducer, new Hotkeys());
+  const [hotkeys, dispatch] = useReducer(hotkeyReducer, new Hotkeys());
 
-  const downHandler = useCallback((event: globalThis.KeyboardEvent) => {
-    event.preventDefault();
-    dispatch({
-      type: "addKey",
-      key: event.key,
-    } as HotkeyAction);
-  }, []);
+  const keyHandler = (type: string) =>
+    useCallback((event: globalThis.KeyboardEvent) => {
+      event.preventDefault();
+      dispatch({
+        type: type,
+        key: event.key,
+      } as HotkeyAction);
+    }, []);
 
-  const upHandler = useCallback((event: globalThis.KeyboardEvent) => {
-    event.preventDefault();
-    dispatch({
-      type: "removeKey",
-      key: event.key,
-    } as HotkeyAction);
-  }, []);
+  const downHandler = keyHandler("addKey");
+  const upHandler = keyHandler("removeKey");
 
   useEffect(() => {
     document.addEventListener("keydown", downHandler);
@@ -66,6 +53,15 @@ export function HotkeyProvider({ children }: { children: JSX.Element }) {
       document.removeEventListener("keyup", upHandler);
     };
   }, []);
+
+  // Ran every rerender
+  useEffect(() => {
+    for (const [hotkey, callback] of hotkeys.callbacks) {
+      if (hotkey.split("+").every((key) => hotkeys.keys.has(key))) {
+        callback();
+      }
+    }
+  });
 
   return (
     <hotkeysDispatchContext.Provider value={dispatch}>

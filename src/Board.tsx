@@ -38,7 +38,7 @@ function Cell({ cell }: { cell: string }) {
       state.cells[cell].digit,
       state.cells[cell].prefilled,
       state.cells[cell].highlighted,
-      state.setHighlightedCell,
+      state.setCurrentCell,
     ],
     shallow
   );
