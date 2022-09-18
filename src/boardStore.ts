@@ -1,6 +1,7 @@
 import create from "zustand";
 import produce from "immer";
 import C from "@/constants";
+import { shuffled, randInt } from "@/utilFuncs";
 
 type Marks = {
   1: boolean;
@@ -51,7 +52,7 @@ function setCurrentCell(draft: BoardStore, cell: string) {
 
 type BoardStore = {
   cells: Cells;
-  time: number;
+  generateGrid: (prefillCount: number) => void;
   loadGrid: (newGrid: string) => void;
   toggleMark: (cell: string, mark: number) => void;
   setCellDigit: (cell: string, digit: number) => void;
@@ -64,7 +65,44 @@ type BoardStore = {
 
 export const useBoardStore = create<BoardStore>((set) => ({
   cells: Object.fromEntries(C.CELLS.map((cellId) => [cellId, {} as Cell])),
-  time: 0,
+  generateGrid(prefillCount) {
+    set(
+      produce((draft: BoardStore) => {
+        // Initialize grid
+        for (const cell of C.CELLS) {
+          draft.cells[cell] = {
+            digit: "0",
+            marks: emptyMarks(),
+            prefilled: false,
+            highlighted: false,
+          } as Cell;
+        }
+
+        const prefillCells = shuffled(C.CELLS).slice(0, prefillCount);
+
+        for (const cell of prefillCells) {
+          const peers = C.PEERS.get(cell);
+          if (peers === undefined) {
+            throw Error("peers for " + cell + " are undefined!");
+          }
+
+          const possibleDigits = new Set(C.COLS);
+
+          // Delete peers' digits
+          for (const peer of peers) {
+            possibleDigits.delete(draft.cells[peer].digit);
+          }
+
+          // Choose digit randomly from possible digits
+          const chosenDigit =
+            Array.from(possibleDigits)[randInt(possibleDigits.size - 1)];
+
+          draft.cells[cell].digit = chosenDigit;
+          draft.cells[cell].prefilled = true;
+        }
+      })
+    );
+  },
   loadGrid(newGrid) {
     set(
       produce((draft: BoardStore) => {
