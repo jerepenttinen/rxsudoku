@@ -7,7 +7,7 @@ type Constants = {
   CELLS: string[];
   GROUPLIST: string[][];
   GROUPS: Map<string, string[][]>;
-  PEERS: Map<string, string[]>;
+  PEERS: Map<string, Set<string>>;
 };
 
 const C: Constants = {
@@ -21,5 +21,37 @@ const C: Constants = {
 };
 
 C.CELLS = cross(C.ROWS, C.COLS);
+
+// Column groups A1, B1, C1, ...
+C.GROUPLIST = C.COLS.map((c) => cross(C.ROWS, [c]))
+  // Row groups A1, A2, A3, ...
+  .concat(C.ROWS.map((r) => cross([r], C.COLS)))
+  // Subgrid groups A1, A2, A3, B1, B2, B3, ...
+  .concat(
+    [
+      ["A", "B", "C"],
+      ["D", "E", "F"],
+      ["G", "H", "I"],
+    ].flatMap((g) =>
+      [
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["7", "8", "9"],
+      ].map((i) => cross(g, i))
+    )
+  );
+
+for (const cell of C.CELLS) {
+  // Find rows, columns and subgrids that the cell is part of
+  const cellGroups = C.GROUPLIST.filter((group) => group.includes(cell));
+  C.GROUPS.set(cell, cellGroups);
+
+  // Flatten and deduplicate groups
+  const cellPeers = new Set(cellGroups.flat());
+
+  // Delete cell itself from its peers
+  cellPeers.delete(cell);
+  C.PEERS.set(cell, cellPeers);
+}
 
 export default Object.freeze(C);
