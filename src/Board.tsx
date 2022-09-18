@@ -22,8 +22,8 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
       className={`${
         mark
           ? "text-zinc-700 dark:text-zinc-300"
-          : "text-transparent hover:text-stone-500"
-      } aspect-square h-full w-full hover:bg-zinc-200`}
+          : "text-transparent hover:text-stone-500 dark:hover:text-stone-400"
+      } aspect-square h-full w-full hover:bg-zinc-200 dark:hover:bg-zinc-700`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
