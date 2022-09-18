@@ -27,7 +27,7 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
-      <span className="pointer-events-none select-none align-top text-[min(1.8vh,1.8vw)]">
+      <span className="pointer-events-none select-none align-top text-[1.8vmin]">
         {number}
       </span>
     </div>
@@ -58,7 +58,7 @@ function Cell({ cell }: { cell: string }) {
         <span
           className={`pointer-events-none select-none ${
             prefilled ? "text-zinc-900 dark:text-zinc-300" : "text-blue-500"
-          } text-[min(5.5vh,5.5vw)]`}
+          } text-[5.5vmin]`}
         >
           {digit}
         </span>
