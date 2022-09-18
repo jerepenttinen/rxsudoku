@@ -161,7 +161,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
     set(
       produce((draft: BoardStore) => {
         const cell = draft.cells[draft.currentCell];
-        if (cell !== undefined && !cell.prefilled) {
+        if (cell !== undefined && !cell.prefilled && cell.marks !== undefined) {
           cell.marks[mark] = !cell.marks[mark];
         }
       })
