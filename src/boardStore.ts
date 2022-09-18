@@ -35,20 +35,13 @@ type Cell = {
   marks: Marks;
   prefilled: boolean;
   highlighted: boolean;
+  isCurrent: boolean;
 };
 
 type Cells = {
   // A1 A2 A3 ... I7 I8 I9
   [cell: string]: Cell;
 };
-
-function setCurrentCell(draft: BoardStore, cell: string) {
-  if (draft.cells[draft.currentCell] !== undefined) {
-    draft.cells[draft.currentCell].highlighted = false;
-  }
-  draft.cells[cell].highlighted = true;
-  draft.currentCell = cell;
-}
 
 type BoardStore = {
   cells: Cells;
@@ -61,6 +54,8 @@ type BoardStore = {
   setCurrentCellDigit: (digit: string) => void;
   toggleCurrentCellMark: (mark: number) => void;
   moveCurrentCell: (direction: string) => void;
+  highlightedCandidates: number;
+  setHighlightedCandidates: (candidate: number) => void;
 };
 
 export const useBoardStore = create<BoardStore>((set) => ({
@@ -75,6 +70,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
             marks: emptyMarks(),
             prefilled: false,
             highlighted: false,
+            isCurrent: false,
           } as Cell;
         }
 
@@ -123,6 +119,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
             marks: emptyMarks(),
             prefilled: v !== "0",
             highlighted: false,
+            isCurrent: false,
           } as Cell;
         }
       })
@@ -216,4 +213,40 @@ export const useBoardStore = create<BoardStore>((set) => ({
       })
     );
   },
+  highlightedCandidates: 0,
+  setHighlightedCandidates(candidate) {
+    set(
+      produce((draft: BoardStore) => {
+        // toggle off
+        if (draft.highlightedCandidates === candidate) {
+          draft.highlightedCandidates = 0;
+          highlightCandidates(draft, 0);
+        } else {
+          draft.highlightedCandidates = candidate;
+          highlightCandidates(draft, candidate);
+        }
+      })
+    );
+  },
 }));
+
+function setCurrentCell(state: BoardStore, cell: string) {
+  if (state.cells[state.currentCell] !== undefined) {
+    state.cells[state.currentCell].isCurrent = false;
+  }
+  state.cells[cell].isCurrent = true;
+  state.currentCell = cell;
+}
+
+function highlightCandidates(state: BoardStore, candidate: number) {
+  for (const cell of C.CELLS) {
+    const c = state.cells[cell];
+    if (candidate === 0) {
+      c.highlighted = false;
+    } else if (c.marks[candidate]) {
+      c.highlighted = true;
+    } else {
+      c.highlighted = false;
+    }
+  }
+}

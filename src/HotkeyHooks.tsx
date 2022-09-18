@@ -3,15 +3,20 @@ import { useBoardStore } from "@/boardStore";
 import shallow from "zustand/shallow";
 
 function HotkeyHooks() {
-  const [setCurrentCellDigit, toggleCurrentCellMark, moveCurrentCell] =
-    useBoardStore(
-      (state) => [
-        state.setCurrentCellDigit,
-        state.toggleCurrentCellMark,
-        state.moveCurrentCell,
-      ],
-      shallow
-    );
+  const [
+    setCurrentCellDigit,
+    toggleCurrentCellMark,
+    moveCurrentCell,
+    setHighlightedCandidates,
+  ] = useBoardStore(
+    (state) => [
+      state.setCurrentCellDigit,
+      state.toggleCurrentCellMark,
+      state.moveCurrentCell,
+      state.setHighlightedCandidates,
+    ],
+    shallow
+  );
 
   useHotkey("Backspace", () => setCurrentCellDigit("0"));
   useHotkey("Delete", () => setCurrentCellDigit("0"));
@@ -19,6 +24,8 @@ function HotkeyHooks() {
   for (let i = 1; i <= 9; i++) {
     useHotkey("ControlRight+Digit" + i, () => toggleCurrentCellMark(i));
     useHotkey("ControlLeft+Digit" + i, () => toggleCurrentCellMark(i));
+    useHotkey("ShiftRight+Digit" + i, () => setHighlightedCandidates(i));
+    useHotkey("ShiftLeft+Digit" + i, () => setHighlightedCandidates(i));
     useHotkey("Digit" + i, () => setCurrentCellDigit(i.toString()));
   }
 

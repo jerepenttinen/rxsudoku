@@ -22,8 +22,8 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
       className={`${
         mark
           ? "text-zinc-700 dark:text-zinc-300"
-          : "text-transparent hover:text-stone-500 dark:hover:text-stone-400"
-      } aspect-square h-full w-full hover:bg-zinc-200 dark:hover:bg-zinc-700`}
+          : "text-transparent hover:text-stone-700/60 dark:hover:text-stone-300/60"
+      } aspect-square h-full w-full hover:shadow-[inset_0em_0em_0em_10em_rgba(0,0,0,0.12)] dark:hover:shadow-[inset_0em_0em_0em_10em_rgba(1,1,1,0.12)]`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
@@ -35,21 +35,23 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
 }
 
 function Cell({ cell }: { cell: string }) {
-  const [digit, prefilled, highlighted, setHighlightedCell] = useBoardStore(
-    (state) => [
-      state.cells[cell].digit,
-      state.cells[cell].prefilled,
-      state.cells[cell].highlighted,
-      state.setCurrentCell,
-    ],
-    shallow
-  );
+  const [digit, prefilled, isCurrent, setCurrentCell, highlighted] =
+    useBoardStore(
+      (state) => [
+        state.cells[cell].digit,
+        state.cells[cell].prefilled,
+        state.cells[cell].isCurrent,
+        state.setCurrentCell,
+        state.cells[cell].highlighted,
+      ],
+      shallow
+    );
 
   return (
     <div
-      onClick={() => setHighlightedCell(cell)}
+      onClick={() => setCurrentCell(cell)}
       className={`${
-        highlighted && "z-10 ring-2 ring-inset ring-blue-500"
+        isCurrent && "z-10 ring-2 ring-inset ring-blue-500"
       }  flex aspect-square items-center justify-center outline outline-1 outline-zinc-900 dark:outline-zinc-600`}
     >
       {digit !== "0" ? (
@@ -61,7 +63,13 @@ function Cell({ cell }: { cell: string }) {
           {digit}
         </span>
       ) : (
-        <div className="grid aspect-square h-full w-full grid-cols-3 grid-rows-3 gap-0 p-1">
+        <div
+          className={`grid aspect-square h-full w-full grid-cols-3 grid-rows-3 gap-0 p-1 ${
+            highlighted && "bg-cyan-300 dark:bg-slate-800"
+          }
+          ${isCurrent && "z-10 ring-2 ring-inset ring-blue-500"}
+          `}
+        >
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n, i) => (
             <Clickable key={`${cell}_${i}`} cell={cell} number={n} />
           ))}
