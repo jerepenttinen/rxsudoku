@@ -65,7 +65,7 @@ function Cell({ cell }: { cell: string }) {
       ) : (
         <div
           className={`grid aspect-square h-full w-full grid-cols-3 grid-rows-3 gap-0 p-1 ${
-            highlighted && "bg-cyan-300 dark:bg-slate-800"
+            highlighted && "bg-blue-300/80 dark:bg-blue-900/30"
           }
           ${isCurrent && "z-10 ring-2 ring-inset ring-blue-500"}
           `}
