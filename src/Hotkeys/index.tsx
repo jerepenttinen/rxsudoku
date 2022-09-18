@@ -33,34 +33,48 @@ function hotkeyReducer(hotkeys: Hotkeys, action: HotkeyAction): Hotkeys {
 export function HotkeyProvider({ children }: { children: JSX.Element }) {
   const [hotkeys, dispatch] = useReducer(hotkeyReducer, new Hotkeys());
 
-  const keyHandler = (type: string) =>
-    useCallback((event: globalThis.KeyboardEvent) => {
-      event.preventDefault();
+  const upHandler = useCallback((event: globalThis.KeyboardEvent) => {
+    event.preventDefault();
+    dispatch({
+      type: "removeKey",
+      key: event.code,
+    } as HotkeyAction);
+  }, []);
+
+  const downHandler = useCallback(
+    (event: globalThis.KeyboardEvent) => {
       dispatch({
-        type: type,
+        type: "addKey",
         key: event.code,
       } as HotkeyAction);
-    }, []);
 
-  const downHandler = keyHandler("addKey");
-  const upHandler = keyHandler("removeKey");
+      const pressedKeys = Array.from(hotkeys.keys).sort().join("+");
+      if (hotkeys.callbacks.has(pressedKeys)) {
+        event.preventDefault();
+      }
+    },
+    [hotkeys]
+  );
+
+  // cleanup pressed keys when focus regained!
+  const focusHandler = useCallback(() => hotkeys.keys.clear(), [hotkeys]);
 
   useEffect(() => {
     document.addEventListener("keydown", downHandler);
     document.addEventListener("keyup", upHandler);
+    window.addEventListener("focus", focusHandler);
     return () => {
       document.removeEventListener("keydown", downHandler);
       document.removeEventListener("keyup", upHandler);
+      window.removeEventListener("focus", focusHandler);
     };
   }, []);
 
   useEffect(() => {
-    for (const [hotkey, callback] of hotkeys.callbacks) {
-      if (hotkey.split("+").every((key) => hotkeys.keys.has(key))) {
-        callback();
-        // Hack! Figure a better way to do overlapping hotkeys! e.g. Shift+A and A
-        break;
-      }
+    const pressedKeys = Array.from(hotkeys.keys).sort().join("+");
+    const callback = hotkeys.callbacks.get(pressedKeys);
+    if (callback !== undefined) {
+      callback();
     }
   }, [hotkeys]);
 
@@ -78,10 +92,12 @@ export default function useHotkey(hotkeys: string, callback: () => void) {
     callbackRef.current = callback;
   });
 
+  const sortedHotkeys = hotkeys.split("+").sort().join("+");
+
   useEffect(() => {
     dispatch({
       type: "addCallback",
-      key: hotkeys,
+      key: sortedHotkeys,
       callback: callbackRef.current,
     });
   }, []);
