@@ -56,9 +56,9 @@ function Cell({ cell }: { cell: string }) {
     >
       {digit !== "0" ? (
         <span
-          className={`pointer-events-none select-none ${
+          className={`pointer-events-none select-none text-[5.5vmin] ${
             prefilled ? "text-zinc-900 dark:text-zinc-300" : "text-blue-500"
-          } text-[5.5vmin]`}
+          }`}
         >
           {digit}
         </span>

@@ -128,7 +128,9 @@ export const useBoardStore = create<BoardStore>((set) => ({
   toggleMark(cell, mark) {
     set(
       produce((draft: BoardStore) => {
-        draft.cells[cell].marks[mark] = !draft.cells[cell].marks[mark];
+        const cc = draft.cells[cell];
+        cc.marks[mark] = !cc.marks[mark];
+        cc.highlighted = cc.marks[draft.highlightedCandidates];
       })
     );
   },
@@ -163,6 +165,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
         const cell = draft.cells[draft.currentCell];
         if (cell !== undefined && !cell.prefilled && cell.marks !== undefined) {
           cell.marks[mark] = !cell.marks[mark];
+          cell.highlighted = cell.marks[draft.highlightedCandidates];
         }
       })
     );
