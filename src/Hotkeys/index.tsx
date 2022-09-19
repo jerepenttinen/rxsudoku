@@ -92,13 +92,17 @@ export default function useHotkey(hotkeys: string, callback: () => void) {
     callbackRef.current = callback;
   });
 
-  const sortedHotkeys = hotkeys.split("+").sort().join("+");
+  const sortedHotkeys = hotkeys
+    .split(",")
+    .map((h) => h.split("+").sort().join("+"));
 
   useEffect(() => {
-    dispatch({
-      type: "addCallback",
-      key: sortedHotkeys,
-      callback: callbackRef.current,
+    sortedHotkeys.forEach((h) => {
+      dispatch({
+        type: "addCallback",
+        key: h,
+        callback: callbackRef.current,
+      });
     });
   }, []);
 }

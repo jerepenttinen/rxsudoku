@@ -22,14 +22,15 @@ function HotkeyHooks() {
     shallow
   );
 
-  useHotkey("Backspace", () => setCurrentCellDigit(0));
-  useHotkey("Delete", () => setCurrentCellDigit(0));
+  useHotkey("Backspace,Delete", () => setCurrentCellDigit(0));
 
   for (let i = 1; i <= 9; i++) {
-    useHotkey("ControlRight+Digit" + i, () => toggleCurrentCellMark(i));
-    useHotkey("ControlLeft+Digit" + i, () => toggleCurrentCellMark(i));
-    useHotkey("ShiftRight+Digit" + i, () => setHighlightedCandidates(i));
-    useHotkey("ShiftLeft+Digit" + i, () => setHighlightedCandidates(i));
+    useHotkey(`ControlRight+Digit${i},ControlLeft+Digit${i}`, () =>
+      toggleCurrentCellMark(i)
+    );
+    useHotkey(`ShiftRight+Digit${i},ShiftLeft+Digit${i}`, () =>
+      setHighlightedCandidates(i)
+    );
     useHotkey("Digit" + i, () => setCurrentCellDigit(i));
   }
 
