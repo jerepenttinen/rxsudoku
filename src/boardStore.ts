@@ -96,6 +96,30 @@ export const useBoardStore = create<BoardStore>((set) => ({
           draft.cells[cell].digit = chosenDigit;
           draft.cells[cell].prefilled = true;
         }
+
+        // Mark non filled cells
+        for (const cellPos of C.CELLS) {
+          const cell = draft.cells[cellPos];
+          if (cell.prefilled) {
+            continue;
+          }
+
+          const peers = C.PEERS.get(cellPos);
+          if (peers === undefined) {
+            throw Error("peers for " + cellPos + " are undefined!");
+          }
+
+          const possibleDigits = new Set(C.COLS);
+
+          // Delete peers' digits
+          for (const peer of peers) {
+            possibleDigits.delete(draft.cells[peer].digit);
+          }
+
+          for (const c of possibleDigits) {
+            cell.marks[Number.parseInt(c)] = true;
+          }
+        }
       })
     );
   },
