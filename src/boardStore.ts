@@ -31,7 +31,7 @@ function emptyMarks(): Marks {
 }
 
 type Cell = {
-  digit: string;
+  digit: number;
   marks: Marks;
   prefilled: boolean;
   highlighted: boolean;
@@ -51,11 +51,13 @@ type BoardStore = {
   setCellDigit: (cell: string, digit: number) => void;
   currentCell: string;
   setCurrentCell: (cell: string) => void;
-  setCurrentCellDigit: (digit: string) => void;
+  setCurrentCellDigit: (digit: number) => void;
   toggleCurrentCellMark: (mark: number) => void;
   moveCurrentCell: (direction: string) => void;
   highlightedCandidates: number;
   setHighlightedCandidates: (candidate: number) => void;
+  toggleCurrentCellHighlightedMark: () => void;
+  toggleCurrentCellHighlightedDigit: () => void;
 };
 
 export const useBoardStore = create<BoardStore>((set) => ({
@@ -66,7 +68,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
         // Initialize grid
         for (const cell of C.CELLS) {
           draft.cells[cell] = {
-            digit: "0",
+            digit: 0,
             marks: emptyMarks(),
             prefilled: false,
             highlighted: false,
@@ -82,7 +84,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
             throw Error("peers for " + cell + " are undefined!");
           }
 
-          const possibleDigits = new Set(C.COLS);
+          const possibleDigits = new Set(C.COLS.map((n) => parseInt(n)));
 
           // Delete peers' digits
           for (const peer of peers) {
@@ -109,7 +111,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
             throw Error("peers for " + cellPos + " are undefined!");
           }
 
-          const possibleDigits = new Set(C.COLS);
+          const possibleDigits = new Set(C.COLS.map((n) => parseInt(n)));
 
           // Delete peers' digits
           for (const peer of peers) {
@@ -117,7 +119,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
           }
 
           for (const c of possibleDigits) {
-            cell.marks[Number.parseInt(c)] = true;
+            cell.marks[c] = true;
           }
         }
       })
@@ -130,7 +132,8 @@ export const useBoardStore = create<BoardStore>((set) => ({
           .replaceAll(".", "0")
           .replaceAll("-", "0")
           .split("")
-          .filter((c: string) => C.ALLOWED_DIGITS.includes(c));
+          .filter((c: string) => C.ALLOWED_DIGITS.includes(c))
+          .map((n) => parseInt(n));
 
         if (grid.length !== 81) {
           console.log(grid.length);
@@ -141,7 +144,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
           draft.cells[C.CELLS[i]] = {
             digit: v,
             marks: emptyMarks(),
-            prefilled: v !== "0",
+            prefilled: v !== 0,
             highlighted: false,
             isCurrent: false,
           } as Cell;
@@ -161,7 +164,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
   setCellDigit(cell, digit) {
     set(
       produce((draft: BoardStore) => {
-        draft.cells[cell].digit = digit.toString();
+        setCellDigit(draft, cell, digit);
       })
     );
   },
@@ -173,13 +176,10 @@ export const useBoardStore = create<BoardStore>((set) => ({
       })
     );
   },
-  setCurrentCellDigit(digit: string) {
+  setCurrentCellDigit(digit) {
     set(
       produce((draft: BoardStore) => {
-        const cell = draft.cells[draft.currentCell];
-        if (cell !== undefined && !cell.prefilled) {
-          cell.digit = digit;
-        }
+        setCellDigit(draft, draft.currentCell, digit);
       })
     );
   },
@@ -255,6 +255,30 @@ export const useBoardStore = create<BoardStore>((set) => ({
       })
     );
   },
+  toggleCurrentCellHighlightedMark() {
+    set(
+      produce((draft: BoardStore) => {
+        const cell = draft.cells[draft.currentCell];
+        if (
+          cell !== undefined &&
+          !cell.prefilled &&
+          draft.highlightedCandidates !== 0 &&
+          cell.marks !== undefined
+        ) {
+          cell.marks[draft.highlightedCandidates] =
+            !cell.marks[draft.highlightedCandidates];
+          cell.highlighted = !cell.highlighted;
+        }
+      })
+    );
+  },
+  toggleCurrentCellHighlightedDigit() {
+    set(
+      produce((draft: BoardStore) => {
+        setCellDigit(draft, draft.currentCell, draft.highlightedCandidates);
+      })
+    );
+  },
 }));
 
 function setCurrentCell(state: BoardStore, cell: string) {
@@ -276,5 +300,28 @@ function highlightCandidates(state: BoardStore, candidate: number) {
     } else {
       c.highlighted = false;
     }
+  }
+}
+
+function eliminateMarks(state: BoardStore, cellPos: string, digit: number) {
+  const peers = C.PEERS.get(cellPos);
+  if (peers === undefined) {
+    return;
+  }
+
+  for (const peerPos of peers) {
+    const peer = state.cells[peerPos];
+    peer.marks[digit] = false;
+    if (state.highlightedCandidates === digit) {
+      peer.highlighted = false;
+    }
+  }
+}
+
+function setCellDigit(state: BoardStore, cellPos: string, digit: number) {
+  const cell = state.cells[cellPos];
+  if (cell !== undefined && !cell.prefilled) {
+    cell.digit = digit;
+    eliminateMarks(state, state.currentCell, digit);
   }
 }

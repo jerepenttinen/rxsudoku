@@ -54,7 +54,7 @@ function Cell({ cell }: { cell: string }) {
         isCurrent && "z-10 ring-2 ring-inset ring-blue-500"
       }  flex items-center justify-center outline outline-1 outline-zinc-900 dark:outline-zinc-600`}
     >
-      {digit !== "0" ? (
+      {digit !== 0 ? (
         <span
           className={`pointer-events-none select-none text-[5.5vmin] ${
             prefilled ? "text-zinc-900 dark:text-zinc-300" : "text-blue-500"
