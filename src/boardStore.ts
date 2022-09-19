@@ -244,9 +244,10 @@ function setCurrentCell(state: BoardStore, cell: string) {
 function highlightCandidates(state: BoardStore, candidate: number) {
   for (const cell of C.CELLS) {
     const c = state.cells[cell];
+
     if (candidate === 0) {
       c.highlighted = false;
-    } else if (c.marks[candidate]) {
+    } else if (c.marks !== undefined && c.marks[candidate]) {
       c.highlighted = true;
     } else {
       c.highlighted = false;
