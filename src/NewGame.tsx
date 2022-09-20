@@ -2,7 +2,7 @@ import { useBoardStore } from "@/boardStore";
 import Button from "@/Button";
 
 function NewGame() {
-  const generateGrid = useBoardStore((state) => state.generateGrid);
+  const generateGrid = useBoardStore((state) => state.generateGridCorrect);
   return (
     <div className="my-3 flex flex-row gap-3">
       <Button onClick={() => generateGrid(34)}>Easy</Button>

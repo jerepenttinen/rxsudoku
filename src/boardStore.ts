@@ -1,7 +1,7 @@
 import create from "zustand";
 import produce from "immer";
 import C from "@/constants";
-import { shuffled, randInt } from "@/utilFuncs";
+import { shuffled, randInt, range, difference } from "@/utilFuncs";
 
 type Marks = {
   1: boolean;
@@ -46,6 +46,7 @@ type Cells = {
 type BoardStore = {
   cells: Cells;
   generateGrid: (prefillCount: number) => void;
+  generateGridCorrect: (prefillCount: number) => void;
   loadGrid: (newGrid: string) => void;
   toggleMark: (cell: string, mark: number) => void;
   setCellDigit: (cell: string, digit: number) => void;
@@ -62,19 +63,11 @@ type BoardStore = {
 
 export const useBoardStore = create<BoardStore>((set) => ({
   cells: Object.fromEntries(C.CELLS.map((cellId) => [cellId, {} as Cell])),
+  // Incorrect!
   generateGrid(prefillCount) {
     set(
       produce((draft: BoardStore) => {
-        // Initialize grid
-        for (const cell of C.CELLS) {
-          draft.cells[cell] = {
-            digit: 0,
-            marks: emptyMarks(),
-            prefilled: false,
-            highlighted: false,
-            isCurrent: false,
-          } as Cell;
-        }
+        initializeGrid(draft);
 
         const prefillCells = shuffled(C.CELLS).slice(0, prefillCount);
 
@@ -103,6 +96,41 @@ export const useBoardStore = create<BoardStore>((set) => ({
         for (const cellPos of C.CELLS) {
           const cell = draft.cells[cellPos];
           if (cell.prefilled) {
+            continue;
+          }
+
+          const peers = C.PEERS.get(cellPos);
+          if (peers === undefined) {
+            throw Error("peers for " + cellPos + " are undefined!");
+          }
+
+          const possibleDigits = new Set(C.COLS.map((n) => parseInt(n)));
+
+          // Delete peers' digits
+          for (const peer of peers) {
+            possibleDigits.delete(draft.cells[peer].digit);
+          }
+
+          for (const c of possibleDigits) {
+            cell.marks[c] = true;
+          }
+        }
+      })
+    );
+  },
+  generateGridCorrect(prefillCount) {
+    set(
+      produce((draft: BoardStore) => {
+        initializeGrid(draft);
+        console.time();
+        generateGrid(draft.cells);
+        removeDigitsFromGrid(draft.cells, prefillCount);
+        console.timeEnd();
+
+        for (const cellPos of C.CELLS) {
+          const cell = draft.cells[cellPos];
+          if (cell.digit !== 0) {
+            cell.prefilled = true;
             continue;
           }
 
@@ -324,4 +352,121 @@ function setCellDigit(state: BoardStore, cellPos: string, digit: number) {
     cell.digit = digit;
     eliminateMarks(state, state.currentCell, digit);
   }
+}
+
+function initializeGrid(state: BoardStore) {
+  // Initialize grid
+  for (const cell of C.CELLS) {
+    state.cells[cell] = {
+      digit: 0,
+      marks: emptyMarks(),
+      prefilled: false,
+      highlighted: false,
+      isCurrent: false,
+    } as Cell;
+  }
+
+  state.highlightedCandidates = 0;
+}
+
+function generateGrid(grid: Cells): boolean {
+  const digits = new Set(range(1, 10));
+  let cellPos = "";
+  for (cellPos of C.CELLS) {
+    if (grid[cellPos].digit === 0) {
+      const peer = C.PEERS.get(cellPos);
+      if (peer === undefined) {
+        continue;
+      }
+
+      const peerDigits = new Set(
+        Array.from(peer).map((pos) => grid[pos].digit)
+      );
+
+      const possibleDigits = shuffled(
+        Array.from(difference(digits, peerDigits))
+      );
+
+      for (const digit of possibleDigits) {
+        grid[cellPos].digit = digit;
+        if (
+          C.CELLS.map((pos) => grid[pos].digit).every((digit) => digit != 0) ||
+          generateGrid(grid)
+        ) {
+          return true;
+        }
+      }
+      break;
+    }
+  }
+  grid[cellPos].digit = 0;
+  return false;
+}
+
+function removeDigitsFromGrid(grid: Cells, prefilledCellCount: number) {
+  const filledCells = shuffled(structuredClone(C.CELLS));
+  for (
+    let filledCellsCount = filledCells.length, rounds = 3;
+    filledCellsCount >= prefilledCellCount && rounds > 0;
+    filledCellsCount--
+  ) {
+    const cellPos = filledCells.pop();
+    if (cellPos === undefined) {
+      break;
+    }
+    const cell = grid[cellPos];
+
+    const removedDigit = cell.digit;
+    cell.digit = 0;
+
+    if (!hasSingleSolution(structuredClone({ ...grid }))) {
+      cell.digit = removedDigit;
+      filledCellsCount++;
+      rounds--;
+    }
+  }
+}
+
+const digits = new Set(range(1, 10));
+
+function hasSingleSolution(grid: Cells): boolean {
+  let solutionCount = 0;
+  const solver = (grid: Cells) => {
+    if (solutionCount > 1) {
+      return false;
+    }
+
+    let cellPos = "";
+    for (cellPos of C.CELLS) {
+      if (grid[cellPos].digit === 0) {
+        const peer = C.PEERS.get(cellPos);
+        if (peer === undefined) {
+          continue;
+        }
+
+        const peerDigits = new Set(
+          Array.from(peer).map((pos) => grid[pos].digit)
+        );
+
+        const possibleDigits = difference(digits, peerDigits);
+
+        for (const digit of possibleDigits) {
+          grid[cellPos].digit = digit;
+          if (
+            C.CELLS.map((pos) => grid[pos].digit).every((digit) => digit !== 0)
+          ) {
+            solutionCount++;
+            return true;
+          } else if (solver(grid)) {
+            return true;
+          }
+        }
+        break;
+      }
+    }
+    grid[cellPos].digit = 0;
+    return false;
+  };
+  solver(grid);
+  return solutionCount === 1;
 }

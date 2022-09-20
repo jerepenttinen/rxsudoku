@@ -40,3 +40,11 @@ export function* range(start: number, stop?: number, step = 1) {
     yield i;
   }
 }
+
+export function difference<T>(A: Set<T>, B: Set<T>): Set<T> {
+  const _difference = new Set(A);
+  for (const elem of B) {
+    _difference.delete(elem);
+  }
+  return _difference;
+}
