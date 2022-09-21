@@ -26,7 +26,7 @@ C.CELLS = cross(C.ROWS, C.COLS);
 C.GROUPLIST = C.COLS.map((c) => cross(C.ROWS, [c]))
   // Row groups A1, A2, A3, ...
   .concat(C.ROWS.map((r) => cross([r], C.COLS)))
-  // Subgrid groups A1, A2, A3, B1, B2, B3, ...
+  // Block groups A1, A2, A3, B1, B2, B3, ...
   .concat(
     [
       ["A", "B", "C"],
@@ -42,7 +42,7 @@ C.GROUPLIST = C.COLS.map((c) => cross(C.ROWS, [c]))
   );
 
 for (const cell of C.CELLS) {
-  // Find rows, columns and subgrids that the cell is part of
+  // Find rows, columns and blocks that the cell is part of
   const cellGroups = C.GROUPLIST.filter((group) => group.includes(cell));
   C.GROUPS.set(cell, cellGroups);
 

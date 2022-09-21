@@ -2,6 +2,7 @@ import create from "zustand";
 import produce from "immer";
 import C from "@/constants";
 import { shuffled, randInt, range, difference } from "@/utilFuncs";
+import generateSudokuGrid from "@/sudokuWasm";
 
 type Marks = {
   1: boolean;
@@ -46,7 +47,7 @@ type Cells = {
 type BoardStore = {
   cells: Cells;
   generateGrid: (prefillCount: number) => void;
-  generateGridCorrect: (prefillCount: number) => void;
+  generateGridSlow: (prefillCount: number) => void;
   loadGrid: (newGrid: string) => void;
   toggleMark: (cell: string, mark: number) => void;
   setCellDigit: (cell: string, digit: number) => void;
@@ -63,120 +64,34 @@ type BoardStore = {
 
 export const useBoardStore = create<BoardStore>((set) => ({
   cells: Object.fromEntries(C.CELLS.map((cellId) => [cellId, {} as Cell])),
-  // Incorrect!
-  generateGrid(prefillCount) {
+  generateGridSlow(prefillCount) {
     set(
       produce((draft: BoardStore) => {
         initializeGrid(draft);
+        console.time("JS");
+        generateGrid(draft.cells);
+        removeDigitsFromGrid(draft.cells, prefillCount);
 
-        const prefillCells = shuffled(C.CELLS).slice(0, prefillCount);
-
-        for (const cell of prefillCells) {
-          const peers = C.PEERS.get(cell);
-          if (peers === undefined) {
-            throw Error("peers for " + cell + " are undefined!");
-          }
-
-          const possibleDigits = new Set(C.COLS.map((n) => parseInt(n)));
-
-          // Delete peers' digits
-          for (const peer of peers) {
-            possibleDigits.delete(draft.cells[peer].digit);
-          }
-
-          // Choose digit randomly from possible digits
-          const chosenDigit =
-            Array.from(possibleDigits)[randInt(possibleDigits.size - 1)];
-
-          draft.cells[cell].digit = chosenDigit;
-          draft.cells[cell].prefilled = true;
-        }
-
-        // Mark non filled cells
-        for (const cellPos of C.CELLS) {
-          const cell = draft.cells[cellPos];
-          if (cell.prefilled) {
-            continue;
-          }
-
-          const peers = C.PEERS.get(cellPos);
-          if (peers === undefined) {
-            throw Error("peers for " + cellPos + " are undefined!");
-          }
-
-          const possibleDigits = new Set(C.COLS.map((n) => parseInt(n)));
-
-          // Delete peers' digits
-          for (const peer of peers) {
-            possibleDigits.delete(draft.cells[peer].digit);
-          }
-
-          for (const c of possibleDigits) {
-            cell.marks[c] = true;
-          }
-        }
+        markUnfilledCells(draft);
+        console.timeEnd("JS");
       })
     );
   },
-  generateGridCorrect(prefillCount) {
+  async generateGrid(prefillCount) {
+    console.time("WASM");
+    const gridStr = await generateSudokuGrid(prefillCount);
     set(
       produce((draft: BoardStore) => {
-        initializeGrid(draft);
-        console.time();
-        generateGrid(draft.cells);
-        removeDigitsFromGrid(draft.cells, prefillCount);
-        console.timeEnd();
-
-        for (const cellPos of C.CELLS) {
-          const cell = draft.cells[cellPos];
-          if (cell.digit !== 0) {
-            cell.prefilled = true;
-            continue;
-          }
-
-          const peers = C.PEERS.get(cellPos);
-          if (peers === undefined) {
-            throw Error("peers for " + cellPos + " are undefined!");
-          }
-
-          const possibleDigits = new Set(C.COLS.map((n) => parseInt(n)));
-
-          // Delete peers' digits
-          for (const peer of peers) {
-            possibleDigits.delete(draft.cells[peer].digit);
-          }
-
-          for (const c of possibleDigits) {
-            cell.marks[c] = true;
-          }
-        }
+        loadGrid(draft, gridStr);
+        markUnfilledCells(draft);
       })
     );
+    console.timeEnd("WASM");
   },
   loadGrid(newGrid) {
     set(
       produce((draft: BoardStore) => {
-        const grid = newGrid
-          .replaceAll(".", "0")
-          .replaceAll("-", "0")
-          .split("")
-          .filter((c: string) => C.ALLOWED_DIGITS.includes(c))
-          .map((n) => parseInt(n));
-
-        if (grid.length !== 81) {
-          console.log(grid.length);
-          throw Error("Grid has to be 81 characters long!");
-        }
-
-        for (const [i, v] of grid.entries()) {
-          draft.cells[C.CELLS[i]] = {
-            digit: v,
-            marks: emptyMarks(),
-            prefilled: v !== 0,
-            highlighted: false,
-            isCurrent: false,
-          } as Cell;
-        }
+        loadGrid(draft, newGrid);
       })
     );
   },
@@ -419,7 +334,7 @@ function removeDigitsFromGrid(grid: Cells, prefilledCellCount: number) {
     const removedDigit = cell.digit;
     cell.digit = 0;
 
-    if (!hasSingleSolution(structuredClone({ ...grid }))) {
+    if (!hasSingleSolution(structuredClone({ ...grid }), filledCellsCount)) {
       cell.digit = removedDigit;
       filledCellsCount++;
       rounds--;
@@ -429,9 +344,9 @@ function removeDigitsFromGrid(grid: Cells, prefilledCellCount: number) {
 
 const digits = new Set(range(1, 10));
 
-function hasSingleSolution(grid: Cells): boolean {
+function hasSingleSolution(grid: Cells, filledCellsCount: number): boolean {
   let solutionCount = 0;
-  const solver = (grid: Cells) => {
+  const solver = (grid: Cells, depth: number) => {
     if (solutionCount > 1) {
       return false;
     }
@@ -439,13 +354,13 @@ function hasSingleSolution(grid: Cells): boolean {
     let cellPos = "";
     for (cellPos of C.CELLS) {
       if (grid[cellPos].digit === 0) {
-        const peer = C.PEERS.get(cellPos);
-        if (peer === undefined) {
+        const peers = C.PEERS.get(cellPos);
+        if (peers === undefined) {
           continue;
         }
 
         const peerDigits = new Set(
-          Array.from(peer).map((pos) => grid[pos].digit)
+          Array.from(peers).map((pos) => grid[pos].digit)
         );
 
         const possibleDigits = difference(digits, peerDigits);
@@ -453,11 +368,12 @@ function hasSingleSolution(grid: Cells): boolean {
         for (const digit of possibleDigits) {
           grid[cellPos].digit = digit;
           if (
-            C.CELLS.map((pos) => grid[pos].digit).every((digit) => digit !== 0)
+            // C.CELLS.map((pos) => grid[pos].digit).every((digit) => digit !== 0)
+            depth === 81
           ) {
             solutionCount++;
             return true;
-          } else if (solver(grid)) {
+          } else if (solver(grid, depth + 1)) {
             return true;
           }
         }
@@ -467,6 +383,56 @@ function hasSingleSolution(grid: Cells): boolean {
     grid[cellPos].digit = 0;
     return false;
   };
-  solver(grid);
+  solver(grid, filledCellsCount);
   return solutionCount === 1;
+}
+
+function loadGrid(state: BoardStore, newGrid: string) {
+  const grid = newGrid
+    .replaceAll(".", "0")
+    .replaceAll("-", "0")
+    .split("")
+    .filter((c: string) => C.ALLOWED_DIGITS.includes(c))
+    .map((n) => parseInt(n));
+
+  if (grid.length !== 81) {
+    console.log(grid.length);
+    throw Error("Grid has to be 81 characters long!");
+  }
+
+  for (const [i, v] of grid.entries()) {
+    state.cells[C.CELLS[i]] = {
+      digit: v,
+      marks: emptyMarks(),
+      prefilled: v !== 0,
+      highlighted: false,
+      isCurrent: false,
+    } as Cell;
+  }
+}
+
+function markUnfilledCells(state: BoardStore) {
+  for (const cellPos of C.CELLS) {
+    const cell = state.cells[cellPos];
+    if (cell.digit !== 0) {
+      cell.prefilled = true;
+      continue;
+    }
+
+    const peers = C.PEERS.get(cellPos);
+    if (peers === undefined) {
+      throw Error("peers for " + cellPos + " are undefined!");
+    }
+
+    const possibleDigits = new Set(C.COLS.map((n) => parseInt(n)));
+
+    // Delete peers' digits
+    for (const peer of peers) {
+      possibleDigits.delete(state.cells[peer].digit);
+    }
+
+    for (const c of possibleDigits) {
+      cell.marks[c] = true;
+    }
+  }
 }
