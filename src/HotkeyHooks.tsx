@@ -10,6 +10,7 @@ function HotkeyHooks() {
     setHighlightedCandidates,
     toggleCurrentCellHighlightedMark,
     toggleCurrentCellHighlightedDigit,
+    undo,
   ] = useBoardStore(
     (state) => [
       state.setCurrentCellDigit,
@@ -18,6 +19,7 @@ function HotkeyHooks() {
       state.setHighlightedCandidates,
       state.toggleCurrentCellHighlightedMark,
       state.toggleCurrentCellHighlightedDigit,
+      state.undo,
     ],
     shallow
   );
@@ -41,6 +43,8 @@ function HotkeyHooks() {
 
   useHotkey("KeyT", toggleCurrentCellHighlightedMark);
   useHotkey("KeyF", toggleCurrentCellHighlightedDigit);
+
+  useHotkey("KeyU,ControlRight+KeyZ,ControlLeft+KeyZ", undo);
 
   return <></>;
 }

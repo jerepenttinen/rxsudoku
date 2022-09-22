@@ -1,8 +1,21 @@
 import create from "zustand";
-import produce from "immer";
+import produce, { applyPatches, enablePatches, Patch } from "immer";
 import C from "@/constants";
-import { shuffled, randInt, range, difference } from "@/utilFuncs";
+import { shuffled, range, difference } from "@/utilFuncs";
 import generateSudokuGrid from "@/sudokuWasm";
+
+enablePatches();
+
+let changes: Patch[][] = [];
+let inverseChanges: Patch[][] = [];
+
+function produceChanges<T>(edit: (state: T) => T | void | undefined) {
+  return (state: T) =>
+    produce(state, edit, (patches: Patch[], inversePatches: Patch[]) => {
+      changes.push(patches);
+      inverseChanges.push(inversePatches);
+    });
+}
 
 type Marks = {
   1: boolean;
@@ -60,11 +73,14 @@ type BoardStore = {
   setHighlightedCandidates: (candidate: number) => void;
   toggleCurrentCellHighlightedMark: () => void;
   toggleCurrentCellHighlightedDigit: () => void;
+  undo: () => void;
 };
 
 export const useBoardStore = create<BoardStore>((set) => ({
   cells: Object.fromEntries(C.CELLS.map((cellId) => [cellId, {} as Cell])),
   generateGridSlow(prefillCount) {
+    changes = [];
+    inverseChanges = [];
     set(
       produce((draft: BoardStore) => {
         initializeGrid(draft);
@@ -80,6 +96,9 @@ export const useBoardStore = create<BoardStore>((set) => ({
   async generateGrid(prefillCount) {
     console.time("WASM");
     const gridStr = await generateSudokuGrid(prefillCount);
+    changes = [];
+    inverseChanges = [];
+
     set(
       produce((draft: BoardStore) => {
         loadGrid(draft, gridStr);
@@ -97,7 +116,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
   },
   toggleMark(cell, mark) {
     set(
-      produce((draft: BoardStore) => {
+      produceChanges((draft: BoardStore) => {
         const cc = draft.cells[cell];
         cc.marks[mark] = !cc.marks[mark];
         cc.highlighted = cc.marks[draft.highlightedCandidates];
@@ -106,7 +125,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
   },
   setCellDigit(cell, digit) {
     set(
-      produce((draft: BoardStore) => {
+      produceChanges((draft: BoardStore) => {
         setCellDigit(draft, cell, digit);
       })
     );
@@ -121,14 +140,14 @@ export const useBoardStore = create<BoardStore>((set) => ({
   },
   setCurrentCellDigit(digit) {
     set(
-      produce((draft: BoardStore) => {
+      produceChanges((draft: BoardStore) => {
         setCellDigit(draft, draft.currentCell, digit);
       })
     );
   },
   toggleCurrentCellMark(mark) {
     set(
-      produce((draft: BoardStore) => {
+      produceChanges((draft: BoardStore) => {
         const cell = draft.cells[draft.currentCell];
         if (cell !== undefined && !cell.prefilled && cell.marks !== undefined) {
           cell.marks[mark] = !cell.marks[mark];
@@ -200,7 +219,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
   },
   toggleCurrentCellHighlightedMark() {
     set(
-      produce((draft: BoardStore) => {
+      produceChanges((draft: BoardStore) => {
         const cell = draft.cells[draft.currentCell];
         if (
           cell !== undefined &&
@@ -217,8 +236,19 @@ export const useBoardStore = create<BoardStore>((set) => ({
   },
   toggleCurrentCellHighlightedDigit() {
     set(
-      produce((draft: BoardStore) => {
+      produceChanges((draft: BoardStore) => {
         setCellDigit(draft, draft.currentCell, draft.highlightedCandidates);
+      })
+    );
+  },
+  undo() {
+    set(
+      produce((draft: BoardStore) => {
+        const change = inverseChanges.pop();
+        if (change !== undefined) {
+          applyPatches(draft, change);
+        }
+        highlightCandidates(draft, draft.highlightedCandidates);
       })
     );
   },
