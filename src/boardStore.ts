@@ -124,11 +124,25 @@ export const useBoardStore = create<BoardStore>((set) => ({
     );
   },
   setCellDigit(cell, digit) {
+    // Hack to remove click changes from double click
+    if (inverseChanges.length >= 2) {
+      const last = inverseChanges.at(-1)?.at(0);
+      const secondLast = inverseChanges.at(-2)?.at(0);
+
+      if (
+        last?.op === secondLast?.op &&
+        last?.value !== secondLast?.value &&
+        JSON.stringify(last?.path) === JSON.stringify(secondLast?.path)
+      ) {
+        inverseChanges.splice(inverseChanges.length - 2, 2);
+      }
+    }
     set(
       produceChanges((draft: BoardStore) => {
         setCellDigit(draft, cell, digit);
       })
     );
+    console.log(inverseChanges);
   },
   currentCell: "",
   setCurrentCell(cell) {
@@ -242,6 +256,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
     );
   },
   undo() {
+    console.log(inverseChanges);
     set(
       produce((draft: BoardStore) => {
         const change = inverseChanges.pop();
