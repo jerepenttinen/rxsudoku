@@ -174,7 +174,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
     set(
       produce((draft: BoardStore) => {
         if (draft.currentCell === "") {
-          draft.currentCell = "A1";
+          setCurrentCell(draft, "A1");
         }
 
         const [row, col] = draft.currentCell.split("");
