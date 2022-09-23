@@ -454,6 +454,8 @@ function loadGrid(state: BoardStore, newGrid: string) {
       isCurrent: false,
     } as Cell;
   }
+
+  state.highlightedCandidates = 0;
 }
 
 function markUnfilledCells(state: BoardStore) {
