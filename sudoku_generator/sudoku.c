@@ -115,9 +115,7 @@ void eliminate(int fillCount) {
     u8 cellPos = cells[cellCount - 1];
     u8 removedDigit = grid[cellPos];
     grid[cellPos] = 0;
-    for (int i = 0; i < 81; i++) {
-      gridCopy[i] = grid[i];
-    }
+    __builtin_memcpy(gridCopy, grid, sizeof grid);
 
     if (!hasSingleSolution(cellCount)) {
       grid[cellPos] = removedDigit;
