@@ -343,6 +343,7 @@ function initializeGrid(state: BoardStore) {
       isCurrent: false,
     } as Cell;
   }
+  state.currentCell = "";
   state.filled = 0;
   state.highlightedCandidates = 0;
 }
@@ -473,6 +474,7 @@ function loadGrid(state: BoardStore, newGrid: string) {
     } as Cell;
   }
 
+  state.currentCell = "";
   state.highlightedCandidates = 0;
   state.filled = grid.reduce((acc, curr) => (curr !== 0 ? acc + 1 : acc), 0);
 }
