@@ -23,7 +23,7 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
         mark
           ? "text-zinc-700 dark:text-zinc-300"
           : "text-transparent hover:text-stone-700/60 dark:hover:text-stone-300/60"
-      } h-full w-full hover:shadow-[inset_0em_0em_0em_10em_rgba(0,0,0,0.12)] dark:hover:shadow-[inset_0em_0em_0em_10em_rgba(1,1,1,0.12)]`}
+      } h-full w-full transition-all ease-in-out hover:shadow-[inset_0em_0em_0em_10em_rgba(0,0,0,0.12)] motion-reduce:transition-none dark:hover:shadow-[inset_0em_0em_0em_10em_rgba(1,1,1,0.12)]`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
@@ -56,7 +56,7 @@ function Cell({ cell }: { cell: string }) {
     >
       {digit !== 0 ? (
         <span
-          className={`pointer-events-none select-none text-[5.5vmin] ${
+          className={`pointer-events-none animate-appear select-none text-[5.5vmin] motion-reduce:animate-none ${
             prefilled ? "text-zinc-900 dark:text-zinc-300" : "text-blue-500"
           }`}
         >
@@ -64,7 +64,7 @@ function Cell({ cell }: { cell: string }) {
         </span>
       ) : (
         <div
-          className={`grid h-full w-full grid-cols-3 grid-rows-3 p-1 ${
+          className={`grid h-full w-full grid-cols-3 grid-rows-3 p-1 transition-colors ease-in-out motion-reduce:transition-none ${
             highlighted && "bg-blue-300/50 dark:bg-blue-900/30"
           }
           ${isCurrent && "z-10 ring-2 ring-inset ring-blue-500"}
@@ -79,7 +79,7 @@ function Cell({ cell }: { cell: string }) {
   );
 }
 
-function SubGrid({ list }: { list: string[] }) {
+function Block({ list }: { list: string[] }) {
   return (
     <div className="grid grid-cols-3 grid-rows-3 gap-[1px] border-2 border-zinc-900 dark:border-zinc-600">
       {list.map((cell) => (
@@ -89,7 +89,7 @@ function SubGrid({ list }: { list: string[] }) {
   );
 }
 
-const subGrids = [
+const blocks = [
   ["A", "B", "C"],
   ["D", "E", "F"],
   ["G", "H", "I"],
@@ -104,8 +104,8 @@ const subGrids = [
 function Board() {
   return (
     <div className="grid h-[80vmin] w-[80vmin] grid-cols-3 grid-rows-3 bg-zinc-50 text-center drop-shadow-2xl dark:bg-zinc-800">
-      {subGrids.map((s, i) => (
-        <SubGrid key={"S" + i} list={s} />
+      {blocks.map((s, i) => (
+        <Block key={"S" + i} list={s} />
       ))}
     </div>
   );
