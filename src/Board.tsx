@@ -66,9 +66,7 @@ function Cell({ cell }: { cell: string }) {
         <div
           className={`grid h-full w-full grid-cols-3 grid-rows-3 p-1 transition-colors ease-in-out motion-reduce:transition-none ${
             highlighted && "bg-blue-300/50 dark:bg-blue-900/30"
-          }
-          ${isCurrent && "z-10 ring-2 ring-inset ring-blue-500"}
-          `}
+          }`}
         >
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n, i) => (
             <Clickable key={`${cell}_${i}`} cell={cell} number={n} />
