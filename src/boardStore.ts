@@ -127,9 +127,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
   toggleMark(cell, mark) {
     set(
       produceChanges((draft: BoardStore) => {
-        const cc = draft.cells[cell];
-        cc.marks[mark] = !cc.marks[mark];
-        cc.highlighted = cc.marks[draft.highlightedCandidates];
+        toggleCellMark(draft, cell, mark);
       })
     );
   },
@@ -171,11 +169,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
   toggleCurrentCellMark(mark) {
     set(
       produceChanges((draft: BoardStore) => {
-        const cell = draft.cells[draft.currentCell];
-        if (cell !== undefined && !cell.prefilled && cell.marks !== undefined) {
-          cell.marks[mark] = !cell.marks[mark];
-          cell.highlighted = cell.marks[draft.highlightedCandidates];
-        }
+        toggleCellMark(draft, draft.currentCell, mark);
       })
     );
   },
@@ -243,17 +237,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
   toggleCurrentCellHighlightedMark() {
     set(
       produceChanges((draft: BoardStore) => {
-        const cell = draft.cells[draft.currentCell];
-        if (
-          cell !== undefined &&
-          !cell.prefilled &&
-          draft.highlightedCandidates !== 0 &&
-          cell.marks !== undefined
-        ) {
-          cell.marks[draft.highlightedCandidates] =
-            !cell.marks[draft.highlightedCandidates];
-          cell.highlighted = !cell.highlighted;
-        }
+        toggleCellMark(draft, draft.currentCell, draft.highlightedCandidates);
       })
     );
   },
@@ -516,4 +500,24 @@ function getPeerDigits(state: BoardStore, cellPos: string) {
     throw Error(`Cell position ${cellPos} not found from peers!`);
   }
   return new Set(Array.from(peers).map((pos) => state.cells[pos].digit));
+}
+
+function toggleCellMark(state: BoardStore, cellPos: string, mark: number) {
+  const cell = state.cells[cellPos];
+  if (
+    cell === undefined ||
+    cell.prefilled ||
+    cell.marks === undefined ||
+    mark === 0
+  ) {
+    return;
+  }
+
+  if (getPeerDigits(state, cellPos).has(mark)) {
+    broadcast("unitConflict", `There's already ${mark} in this unit`);
+    return;
+  }
+
+  cell.marks[mark] = !cell.marks[mark];
+  cell.highlighted = cell.marks[state.highlightedCandidates];
 }
