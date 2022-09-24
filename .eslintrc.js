@@ -19,15 +19,11 @@ module.exports = {
     parser: "@typescript-eslint/parser",
     parserOptions: {
       project: "tsconfig.json",
-      tsconfigRootDir: "./"
+      tsconfigRootDir: "./",
     },
     // Tells eslint how to resolve imports
     "import/resolver": {
       typescript: {},
-      // node: {
-      //   paths: ["src"],
-      //   extensions: [".js", ".jsx", ".ts", ".tsx"],
-      // },
     },
   },
   rules: {

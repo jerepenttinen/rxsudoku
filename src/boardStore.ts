@@ -3,6 +3,7 @@ import produce, { applyPatches, enablePatches, Patch } from "immer";
 import C from "@/constants";
 import { shuffled, range, difference } from "@/utilFuncs";
 import generateSudokuGrid from "@/sudokuWasm";
+import { broadcast } from "@/events";
 
 enablePatches();
 
@@ -59,6 +60,7 @@ type Cells = {
 
 type BoardStore = {
   cells: Cells;
+  filled: number;
   generateGrid: (prefillCount: number) => void;
   generateGridSlow: (prefillCount: number) => void;
   loadGrid: (newGrid: string) => void;
@@ -78,6 +80,7 @@ type BoardStore = {
 
 export const useBoardStore = create<BoardStore>((set) => ({
   cells: Object.fromEntries(C.CELLS.map((cellId) => [cellId, {} as Cell])),
+  filled: 0,
   generateGridSlow(prefillCount) {
     changes = [];
     inverseChanges = [];
@@ -87,8 +90,14 @@ export const useBoardStore = create<BoardStore>((set) => ({
         console.time("JS");
         generateGrid(draft.cells);
         removeDigitsFromGrid(draft.cells, prefillCount);
-
-        markUnfilledCells(draft);
+        for (const cellPos of C.CELLS) {
+          const cell = draft.cells[cellPos];
+          if (cell.digit !== 0) {
+            cell.prefilled = true;
+            draft.filled++;
+          }
+        }
+        markUnfilledCells(draft, C.CELLS);
         console.timeEnd("JS");
       })
     );
@@ -102,7 +111,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
     set(
       produce((draft: BoardStore) => {
         loadGrid(draft, gridStr);
-        markUnfilledCells(draft);
+        markUnfilledCells(draft, C.CELLS);
       })
     );
     console.timeEnd("WASM");
@@ -142,7 +151,6 @@ export const useBoardStore = create<BoardStore>((set) => ({
         setCellDigit(draft, cell, digit);
       })
     );
-    console.log(inverseChanges);
   },
   currentCell: "",
   setCurrentCell(cell) {
@@ -256,7 +264,6 @@ export const useBoardStore = create<BoardStore>((set) => ({
     );
   },
   undo() {
-    console.log(inverseChanges);
     set(
       produce((draft: BoardStore) => {
         const change = inverseChanges.pop();
@@ -308,9 +315,30 @@ function eliminateMarks(state: BoardStore, cellPos: string, digit: number) {
 
 function setCellDigit(state: BoardStore, cellPos: string, digit: number) {
   const cell = state.cells[cellPos];
-  if (cell !== undefined && !cell.prefilled) {
-    cell.digit = digit;
+  if (cell === undefined || cell.prefilled) {
+    return;
+  }
+
+  if (digit !== 0 && getPeerDigits(state, cellPos).has(digit)) {
+    broadcast("unitConflict", `There's already ${digit} in this unit`);
+    return;
+  }
+
+  if (cell.digit === 0 && digit !== 0) {
+    state.filled++;
+    if (state.filled === 81) {
+      broadcast("gameOver", "");
+    }
+  } else if (cell.digit !== 0 && digit === 0) {
+    state.filled--;
+  }
+
+  cell.digit = digit;
+
+  if (digit !== 0) {
     eliminateMarks(state, state.currentCell, digit);
+  } else {
+    markUnfilledCells(state, C.PEERS.get(state.currentCell)!);
   }
 }
 
@@ -325,7 +353,7 @@ function initializeGrid(state: BoardStore) {
       isCurrent: false,
     } as Cell;
   }
-
+  state.filled = 0;
   state.highlightedCandidates = 0;
 }
 
@@ -456,30 +484,27 @@ function loadGrid(state: BoardStore, newGrid: string) {
   }
 
   state.highlightedCandidates = 0;
+  state.filled = grid.reduce((acc, curr) => (curr !== 0 ? acc + 1 : acc), 0);
 }
 
-function markUnfilledCells(state: BoardStore) {
-  for (const cellPos of C.CELLS) {
+function markUnfilledCells(state: BoardStore, cells: string[] | Set<string>) {
+  for (const cellPos of cells) {
     const cell = state.cells[cellPos];
     if (cell.digit !== 0) {
-      cell.prefilled = true;
       continue;
     }
-
-    const peers = C.PEERS.get(cellPos);
-    if (peers === undefined) {
-      throw Error("peers for " + cellPos + " are undefined!");
-    }
-
-    const possibleDigits = new Set(C.COLS.map((n) => parseInt(n)));
-
-    // Delete peers' digits
-    for (const peer of peers) {
-      possibleDigits.delete(state.cells[peer].digit);
-    }
+    const possibleDigits = difference(digits, getPeerDigits(state, cellPos));
 
     for (const c of possibleDigits) {
       cell.marks[c] = true;
     }
   }
+}
+
+function getPeerDigits(state: BoardStore, cellPos: string) {
+  const peers = C.PEERS.get(cellPos);
+  if (peers === undefined) {
+    throw Error(`Cell position ${cellPos} not found from peers!`);
+  }
+  return new Set(Array.from(peers).map((pos) => state.cells[pos].digit));
 }
