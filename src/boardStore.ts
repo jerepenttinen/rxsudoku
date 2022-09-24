@@ -1,7 +1,7 @@
 import create from "zustand";
 import produce, { applyPatches, enablePatches, Patch } from "immer";
 import C from "@/constants";
-import { shuffled, range, difference } from "@/utilFuncs";
+import { shuffled, range, difference, clamp } from "@/utilFuncs";
 import generateSudokuGrid from "@/sudokuWasm";
 import { broadcast } from "@/events";
 import { stat } from "fs";
@@ -59,6 +59,8 @@ type Cells = {
   [cell: string]: Cell;
 };
 
+type Direction = "up" | "down" | "left" | "right";
+
 type BoardStore = {
   cells: Cells;
   filled: number;
@@ -71,7 +73,8 @@ type BoardStore = {
   setCurrentCell: (cell: string) => void;
   setCurrentCellDigit: (digit: number) => void;
   toggleCurrentCellMark: (mark: number) => void;
-  moveCurrentCell: (direction: string) => void;
+  moveCurrentCell: (direction: Direction) => void;
+  moveCurrentCellByBlock: (direction: Direction) => void;
   highlightedCandidates: number;
   setHighlightedCandidates: (candidate: number) => void;
   toggleCurrentCellHighlightedMark: () => void;
@@ -212,8 +215,59 @@ export const useBoardStore = create<BoardStore>((set) => ({
             }
             break;
           }
-          default: {
-            throw Error("unknown direction: " + direction);
+        }
+      })
+    );
+  },
+  moveCurrentCellByBlock(direction) {
+    set(
+      produce((draft: BoardStore) => {
+        if (draft.currentCell === "") {
+          setCurrentCell(draft, "A1");
+        }
+
+        const [row, col] = draft.currentCell.split("");
+        const colNum = Number.parseInt(col);
+        const ACharCode = "A".charCodeAt(0);
+        const rowNum = row.charCodeAt(0) - ACharCode + 1;
+
+        function setCell(r: number, c: number) {
+          setCurrentCell(
+            draft,
+            clamp("A", String.fromCharCode(r - 1 + ACharCode), "I") +
+              clamp(1, c, 9)
+          );
+        }
+
+        // outwards from the top/left
+        function byBlock(num: number, outwards: boolean): number {
+          let distanceFromEdge = (num - 1) % 3;
+          if (outwards) {
+            distanceFromEdge = 2 - distanceFromEdge;
+          }
+          const nextBlock = distanceFromEdge === 0 ? 3 : 0;
+
+          return outwards
+            ? num + distanceFromEdge + nextBlock
+            : num - distanceFromEdge - nextBlock;
+        }
+
+        switch (direction) {
+          case "left": {
+            setCell(rowNum, byBlock(colNum, false));
+            break;
+          }
+          case "right": {
+            setCell(rowNum, byBlock(colNum, true));
+            break;
+          }
+          case "up": {
+            setCell(byBlock(rowNum, false), colNum);
+            break;
+          }
+          case "down": {
+            setCell(byBlock(rowNum, true), colNum);
+            break;
           }
         }
       })

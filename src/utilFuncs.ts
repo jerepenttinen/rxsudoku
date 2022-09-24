@@ -48,3 +48,13 @@ export function difference<T>(A: Set<T>, B: Set<T>): Set<T> {
   }
   return _difference;
 }
+
+export function clamp<T extends number | string>(low: T, value: T, high: T) {
+  if (low > value) {
+    return low;
+  } else if (value > high) {
+    return high;
+  } else {
+    return value;
+  }
+}

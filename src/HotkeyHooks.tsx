@@ -7,6 +7,7 @@ function HotkeyHooks() {
     setCurrentCellDigit,
     toggleCurrentCellMark,
     moveCurrentCell,
+    moveCurrentCellByBlock,
     setHighlightedCandidates,
     toggleCurrentCellHighlightedMark,
     toggleCurrentCellHighlightedDigit,
@@ -16,6 +17,7 @@ function HotkeyHooks() {
       state.setCurrentCellDigit,
       state.toggleCurrentCellMark,
       state.moveCurrentCell,
+      state.moveCurrentCellByBlock,
       state.setHighlightedCandidates,
       state.toggleCurrentCellHighlightedMark,
       state.toggleCurrentCellHighlightedDigit,
@@ -40,6 +42,19 @@ function HotkeyHooks() {
   useHotkey("ArrowRight", () => moveCurrentCell("right"));
   useHotkey("ArrowUp", () => moveCurrentCell("up"));
   useHotkey("ArrowDown", () => moveCurrentCell("down"));
+
+  useHotkey("ControlRight+ArrowLeft,ControlLeft+ArrowLeft", () =>
+    moveCurrentCellByBlock("left")
+  );
+  useHotkey("ControlRight+ArrowRight,ControlRight+ArrowRight", () =>
+    moveCurrentCellByBlock("right")
+  );
+  useHotkey("ControlRight+ArrowUp,ControlRight+ArrowUp", () =>
+    moveCurrentCellByBlock("up")
+  );
+  useHotkey("ControlRight+ArrowDown,ControlRight+ArrowDown", () =>
+    moveCurrentCellByBlock("down")
+  );
 
   useHotkey("KeyT", toggleCurrentCellHighlightedMark);
   useHotkey("KeyF", toggleCurrentCellHighlightedDigit);
