@@ -266,7 +266,12 @@ export const useBoardStore = create<BoardStore>((set) => ({
   undo() {
     set(
       produce((draft: BoardStore) => {
-        const change = inverseChanges.pop();
+        let change = inverseChanges.pop();
+        // discard empty changes
+        while (change !== undefined && change.length === 0) {
+          change = inverseChanges.pop();
+        }
+        console.log(change);
         if (change !== undefined) {
           applyPatches(draft, change);
         }
@@ -315,7 +320,7 @@ function eliminateMarks(state: BoardStore, cellPos: string, digit: number) {
 
 function setCellDigit(state: BoardStore, cellPos: string, digit: number) {
   const cell = state.cells[cellPos];
-  if (cell === undefined || cell.prefilled) {
+  if (cell === undefined || cell.prefilled || cell.digit === digit) {
     return;
   }
 
