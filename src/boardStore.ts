@@ -4,6 +4,7 @@ import C from "@/constants";
 import { shuffled, range, difference } from "@/utilFuncs";
 import generateSudokuGrid from "@/sudokuWasm";
 import { broadcast } from "@/events";
+import { stat } from "fs";
 
 enablePatches();
 
@@ -502,6 +503,9 @@ function markUnfilledCells(state: BoardStore, cells: string[] | Set<string>) {
 
     for (const c of possibleDigits) {
       cell.marks[c] = true;
+      if (state.highlightedCandidates === c) {
+        cell.highlighted = true;
+      }
     }
   }
 }
