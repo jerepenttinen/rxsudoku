@@ -4,7 +4,6 @@ import C from "@/constants";
 import { shuffled, range, difference, clamp } from "@/utilFuncs";
 import generateSudokuGrid from "@/sudokuWasm";
 import { broadcast } from "@/events";
-import { stat } from "fs";
 
 enablePatches();
 
@@ -61,7 +60,7 @@ type Cells = {
 
 type Direction = "up" | "down" | "left" | "right";
 
-type BoardStore = {
+export type BoardStore = {
   cells: Cells;
   filled: number;
   generateGrid: (prefillCount: number) => void;
@@ -124,6 +123,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
     set(
       produce((draft: BoardStore) => {
         loadGrid(draft, newGrid);
+        markUnfilledCells(draft, C.CELLS);
       })
     );
   },
@@ -320,7 +320,7 @@ export const useBoardStore = create<BoardStore>((set) => ({
   },
 }));
 
-function setCurrentCell(state: BoardStore, cell: string) {
+export function setCurrentCell(state: BoardStore, cell: string) {
   if (state.cells[state.currentCell] !== undefined) {
     state.cells[state.currentCell].isCurrent = false;
   }
@@ -328,7 +328,7 @@ function setCurrentCell(state: BoardStore, cell: string) {
   state.currentCell = cell;
 }
 
-function highlightCandidates(state: BoardStore, candidate: number) {
+export function highlightCandidates(state: BoardStore, candidate: number) {
   for (const cell of C.CELLS) {
     const c = state.cells[cell];
 
@@ -342,7 +342,11 @@ function highlightCandidates(state: BoardStore, candidate: number) {
   }
 }
 
-function eliminateMarks(state: BoardStore, cellPos: string, digit: number) {
+export function eliminateMarks(
+  state: BoardStore,
+  cellPos: string,
+  digit: number
+) {
   const peers = C.PEERS.get(cellPos);
   if (peers === undefined) {
     return;
@@ -357,7 +361,11 @@ function eliminateMarks(state: BoardStore, cellPos: string, digit: number) {
   }
 }
 
-function setCellDigit(state: BoardStore, cellPos: string, digit: number) {
+export function setCellDigit(
+  state: BoardStore,
+  cellPos: string,
+  digit: number
+) {
   const cell = state.cells[cellPos];
   if (cell === undefined || cell.prefilled || cell.digit === digit) {
     return;
@@ -377,16 +385,16 @@ function setCellDigit(state: BoardStore, cellPos: string, digit: number) {
     state.filled--;
   }
 
+  const lastDigit = cell.digit;
   cell.digit = digit;
 
   if (digit !== 0) {
-    eliminateMarks(state, state.currentCell, digit);
-  } else {
-    markUnfilledCells(state, C.PEERS.get(state.currentCell)!);
+    eliminateMarks(state, cellPos, digit);
   }
+  markUnfilledCellsDigit(state, C.PEERS.get(cellPos)!, lastDigit);
 }
 
-function initializeGrid(state: BoardStore) {
+export function initializeGrid(state: BoardStore) {
   // Initialize grid
   for (const cell of C.CELLS) {
     state.cells[cell] = {
@@ -402,7 +410,7 @@ function initializeGrid(state: BoardStore) {
   state.highlightedCandidates = 0;
 }
 
-function generateGrid(grid: Cells): boolean {
+export function generateGrid(grid: Cells): boolean {
   const digits = new Set(range(1, 10));
   let cellPos = "";
   for (cellPos of C.CELLS) {
@@ -436,7 +444,7 @@ function generateGrid(grid: Cells): boolean {
   return false;
 }
 
-function removeDigitsFromGrid(grid: Cells, prefilledCellCount: number) {
+export function removeDigitsFromGrid(grid: Cells, prefilledCellCount: number) {
   const filledCells = shuffled(structuredClone(C.CELLS));
   for (
     let filledCellsCount = filledCells.length, rounds = 3;
@@ -462,7 +470,10 @@ function removeDigitsFromGrid(grid: Cells, prefilledCellCount: number) {
 
 const digits = new Set(range(1, 10));
 
-function hasSingleSolution(grid: Cells, filledCellsCount: number): boolean {
+export function hasSingleSolution(
+  grid: Cells,
+  filledCellsCount: number
+): boolean {
   let solutionCount = 0;
   const solver = (grid: Cells, depth: number) => {
     if (solutionCount > 1) {
@@ -505,7 +516,7 @@ function hasSingleSolution(grid: Cells, filledCellsCount: number): boolean {
   return solutionCount === 1;
 }
 
-function loadGrid(state: BoardStore, newGrid: string) {
+export function loadGrid(state: BoardStore, newGrid: string) {
   const grid = newGrid
     .replaceAll(".", "0")
     .replaceAll("-", "0")
@@ -514,7 +525,6 @@ function loadGrid(state: BoardStore, newGrid: string) {
     .map((n) => parseInt(n));
 
   if (grid.length !== 81) {
-    console.log(grid.length);
     throw Error("Grid has to be 81 characters long!");
   }
 
@@ -530,7 +540,10 @@ function loadGrid(state: BoardStore, newGrid: string) {
 
   state.currentCell = "";
   state.highlightedCandidates = 0;
-  state.filled = grid.reduce((acc, curr) => (curr !== 0 ? acc + 1 : acc), 0);
+  state.filled = C.CELLS.map((pos) => state.cells[pos]).reduce(
+    (acc, cur) => (cur.prefilled ? acc + 1 : acc),
+    0
+  );
 }
 
 function markUnfilledCells(state: BoardStore, cells: string[] | Set<string>) {
@@ -550,7 +563,29 @@ function markUnfilledCells(state: BoardStore, cells: string[] | Set<string>) {
   }
 }
 
-function getPeerDigits(state: BoardStore, cellPos: string) {
+function markUnfilledCellsDigit(
+  state: BoardStore,
+  cells: string[] | Set<string>,
+  digit: number
+) {
+  for (const cellPos of cells) {
+    const cell = state.cells[cellPos];
+    if (cell.digit !== 0) {
+      continue;
+    }
+
+    const possibleDigits = difference(digits, getPeerDigits(state, cellPos));
+    cell.marks[digit] = possibleDigits.has(digit);
+
+    if (
+      state.highlightedCandidates !== 0 &&
+      cell.marks[state.highlightedCandidates]
+    ) {
+      cell.highlighted = true;
+    }
+  }
+}
+export function getPeerDigits(state: BoardStore, cellPos: string) {
   const peers = C.PEERS.get(cellPos);
   if (peers === undefined) {
     throw Error(`Cell position ${cellPos} not found from peers!`);
@@ -558,7 +593,11 @@ function getPeerDigits(state: BoardStore, cellPos: string) {
   return new Set(Array.from(peers).map((pos) => state.cells[pos].digit));
 }
 
-function toggleCellMark(state: BoardStore, cellPos: string, mark: number) {
+export function toggleCellMark(
+  state: BoardStore,
+  cellPos: string,
+  mark: number
+) {
   const cell = state.cells[cellPos];
   if (
     cell === undefined ||

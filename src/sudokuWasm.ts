@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import init from "./sudoku.wasm?init";
 
 type SudokuInstance = {
@@ -7,11 +8,18 @@ type SudokuInstance = {
   };
 };
 
-const {
-  exports: { memory, generateSudokuGrid },
-} = (await init({})) as SudokuInstance;
+let once = true;
+let memory: WebAssembly.Memory;
+let generateSudokuGrid: CallableFunction;
 
-function generateGrid(prefillCount: number): Promise<string> {
+async function generateGrid(prefillCount: number): Promise<string> {
+  if (once) {
+    once = false;
+    const { exports } = (await init({})) as SudokuInstance;
+    memory = exports.memory;
+    generateSudokuGrid = exports.generateSudokuGrid;
+  }
+
   return new Promise<string>((resolve) => {
     const gridBuf = new Uint8Array(memory.buffer, 0, 81);
     generateSudokuGrid(
