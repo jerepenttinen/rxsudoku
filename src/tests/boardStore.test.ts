@@ -1,4 +1,9 @@
-import { useBoardStore, BoardStore, initializeGrid } from "@/boardStore";
+import {
+  useBoardStore,
+  BoardStore,
+  initializeGrid,
+  hasSingleSolution,
+} from "@/boardStore";
 import { renderHook } from "@testing-library/react";
 
 import C from "@/constants";
@@ -191,5 +196,56 @@ describe("boardStore", () => {
       state.moveCurrentCellByBlock("up");
     });
     expect(state.currentCell).toBe("D4");
+  });
+
+  test("hasSingleSolution", () => {
+    function count(state: BoardStore) {
+      return (
+        C.CELLS.map((pos) => state.cells[pos].digit).reduce(
+          (acc, cur) => (cur !== 0 ? acc + 1 : acc),
+          0
+        ) + 1
+      );
+    }
+
+    act(() => {
+      state.loadGrid(
+        "930654102420301609610209040842016090579843216163092004384925761251467938796138425"
+      );
+    });
+
+    expect(
+      hasSingleSolution(structuredClone({ ...state.cells }), count(state))
+    ).toBe(false);
+
+    act(() => {
+      state.loadGrid(
+        "593764821281395040476182935158279364362418579947536182039841250815627493024953018"
+      );
+    });
+
+    expect(
+      hasSingleSolution(structuredClone({ ...state.cells }), count(state))
+    ).toBe(false);
+
+    act(() => {
+      state.loadGrid(
+        "000879163386100729917326458073200896009768315060903274050631947691487532734592681"
+      );
+    });
+
+    expect(
+      hasSingleSolution(structuredClone({ ...state.cells }), count(state))
+    ).toBe(false);
+
+    act(() => {
+      state.loadGrid(
+        "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
+      );
+    });
+
+    expect(
+      hasSingleSolution(structuredClone({ ...state.cells }), count(state))
+    ).toBe(true);
   });
 });

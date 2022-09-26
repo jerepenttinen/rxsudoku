@@ -9,7 +9,7 @@ function HighlightButtons() {
     shallow
   );
   return (
-    <div className="my-4 flex flex-row">
+    <div className="my-4 flex select-none flex-row">
       {Array.from(range(1, 10)).map((num, key) => (
         <Button
           key={key}

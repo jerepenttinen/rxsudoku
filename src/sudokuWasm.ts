@@ -1,34 +1,18 @@
-import { useMemo } from "react";
-import init from "./sudoku.wasm?init";
+import MyWorker from "@/sudokuWasmWorker?worker";
 
-type SudokuInstance = {
-  exports: {
-    memory: WebAssembly.Memory;
-    generateSudokuGrid: CallableFunction;
-  };
-};
+let worker: Worker;
+if (window.Worker) {
+  worker = new MyWorker();
+}
 
-let once = true;
-let memory: WebAssembly.Memory;
-let generateSudokuGrid: CallableFunction;
-
-async function generateGrid(prefillCount: number): Promise<string> {
-  if (once) {
-    once = false;
-    const { exports } = (await init({})) as SudokuInstance;
-    memory = exports.memory;
-    generateSudokuGrid = exports.generateSudokuGrid;
-  }
-
+async function generateGridSudokuGrid(prefillCount: number): Promise<string> {
   return new Promise<string>((resolve) => {
-    const gridBuf = new Uint8Array(memory.buffer, 0, 81);
-    generateSudokuGrid(
-      gridBuf.byteOffset,
-      prefillCount,
-      Math.floor(Date.now() / 1000)
-    );
-    resolve(new TextDecoder("utf8").decode(gridBuf));
+    worker.postMessage([prefillCount]);
+    worker.onmessage = (e) => {
+      console.log(e.data);
+      resolve(e.data);
+    };
   });
 }
 
-export default generateGrid;
+export default generateGridSudokuGrid;

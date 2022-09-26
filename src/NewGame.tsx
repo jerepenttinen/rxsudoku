@@ -16,7 +16,7 @@ function NewGame() {
   );
 
   return (
-    <div className="my-3 flex flex-row gap-3">
+    <div className="my-3 flex select-none flex-row gap-3">
       <Button onClick={() => generateGrid(34)}>Easy</Button>
       <Button onClick={() => generateGrid(30)}>Medium</Button>
       <Button onClick={() => generateGrid(27)}>Hard</Button>

@@ -26,20 +26,25 @@ void shuffle(u8 *arr, int length) {
   }
 }
 
+int getPeerDigitsBitset(u8 g[81], int cellPos) {
+  u8 *peers = peerTable[cellPos];
+  int digitBitset = 0b111111111;
+
+  for (int i = 0; i < 20; i++) {
+    // peer digit
+    u8 digit = g[peers[i]];
+    if (digit != 0) {
+      CLEAR_BIT(digitBitset, digit - 1);
+    }
+  }
+  return digitBitset;
+}
+
 int generate(int depth) {
   u8 indices[9] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
   for (int cellPos = depth; cellPos < 81; cellPos++) {
     if (grid[cellPos] == 0) {
-      u8 *peers = peerTable[cellPos];
-      int digitBitset = 0b111111111;
-
-      for (int i = 0; i < 20; i++) {
-        // peer digit
-        u8 digit = grid[peers[i]];
-        if (digit != 0) {
-          CLEAR_BIT(digitBitset, digit - 1);
-        }
-      }
+      int digitBitset = getPeerDigitsBitset(grid, cellPos);
       shuffle(indices, 9);
       for (int i = 0; i < 9; i++) {
         // cell digit
@@ -60,40 +65,30 @@ int generate(int depth) {
 }
 
 int solver(int depth, int *solutionCount) {
-  if (*solutionCount > 1) {
-    return 0;
-  }
-
   for (int cellPos = 0; cellPos < 81; cellPos++) {
-    if (gridCopy[cellPos] == 0) {
-      u8 *peers = peerTable[cellPos];
-      int digitBitset = 0b111111111;
-
-      for (int i = 0; i < 20; i++) {
-        // peer digit
-        u8 digit = gridCopy[peers[i]];
-        if (digit != 0) {
-          CLEAR_BIT(digitBitset, digit - 1);
-        }
-      }
-
-      for (int i = 0; i < 9; i++) {
-        // cell digit
-        if (CHECK_BIT(digitBitset, i)) {
-          gridCopy[cellPos] = i + 1;
-          if (depth == 81) {
-            (*solutionCount)++;
-            return 1;
-          } else if (solver(depth + 1, solutionCount)) {
-            return 1;
-          }
-        }
-      }
-      gridCopy[cellPos] = 0;
-      return 0;
+    if (gridCopy[cellPos] != 0) {
+      continue;
     }
-  }
+    int digitBitset = getPeerDigitsBitset(gridCopy, cellPos);
+    for (int i = 0; i < 9; i++) {
+      // cell digit
+      if (CHECK_BIT(digitBitset, i)) {
+        gridCopy[cellPos] = i + 1;
+        if (depth == 81) {
+          (*solutionCount)++;
+          break;
+        } else if (solver(depth + 1, solutionCount)) {
+          return 1;
+        }
 
+        if (*solutionCount > 1) {
+          return 0;
+        }
+      }
+    }
+    gridCopy[cellPos] = 0;
+    break;
+  }
   return 0;
 }
 
@@ -108,18 +103,20 @@ void eliminate(int fillCount) {
   for (u8 i = 0; i < 81; i++) {
     cells[i] = i;
   }
-
   shuffle(cells, 81);
-  for (int cellCount = 81, rounds = 3; cellCount > fillCount && rounds > 0;
-       cellCount--) {
-    u8 cellPos = cells[cellCount - 1];
+
+  int stack = 80;
+  for (int cellCount = 81; cellCount > fillCount; cellCount--) {
+    if (stack < 0) {
+      break;
+    }
+    u8 cellPos = cells[stack--];
     u8 removedDigit = grid[cellPos];
     grid[cellPos] = 0;
     __builtin_memcpy(gridCopy, grid, sizeof grid);
 
     if (!hasSingleSolution(cellCount)) {
       grid[cellPos] = removedDigit;
-      rounds--;
       cellCount++;
     }
   }
