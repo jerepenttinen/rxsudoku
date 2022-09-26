@@ -5,11 +5,12 @@ import { useBoardStore } from "@/boardStore";
 import shallow from "zustand/shallow";
 
 function Clickable({ cell, number }: { cell: string; number: number }) {
-  const [toggleMark, setCellDigit, mark] = useBoardStore(
+  const [toggleMark, setCellDigit, mark, highlighted] = useBoardStore(
     (state) => [
       state.toggleMark,
       state.setCellDigit,
       state.cells[cell].marks[number],
+      state.cells[cell].highlighted,
     ],
     shallow
   );
@@ -17,13 +18,27 @@ function Clickable({ cell, number }: { cell: string; number: number }) {
   const handleClick = () => toggleMark(cell, number);
   const handleDoubleClick = () => setCellDigit(cell, number);
 
+  const textColor = !highlighted ? "text-zinc-700" : "text-blue-800";
+  const darkTextColor = !highlighted
+    ? "dark:text-zinc-300"
+    : "dark:text-blue-200";
+  const hoverTextColor = !highlighted
+    ? "hover:text-zinc-700/60"
+    : "hover:text-blue-800/60";
+  const darkHoverTextColor = !highlighted
+    ? "dark:hover:text-zinc-300/60"
+    : "dark:hover:text-blue-200/60";
+  const hoverShadow = !highlighted
+    ? "hover:shadow-[inset_0em_0em_0em_5em_rgba(0,0,0,0.12)]"
+    : "hover:shadow-[inset_0em_0em_0em_5em_rgba(29,78,216,0.15)]";
+
   return (
     <div
       className={`${
         mark
-          ? "text-zinc-700 dark:text-zinc-300"
-          : "text-transparent hover:text-stone-700/60 dark:hover:text-stone-300/60"
-      } h-full w-full transition-all ease-in-out hover:shadow-[inset_0em_0em_0em_10em_rgba(0,0,0,0.12)] motion-reduce:transition-none dark:hover:shadow-[inset_0em_0em_0em_10em_rgba(1,1,1,0.12)]`}
+          ? `${textColor} ${darkTextColor}`
+          : `text-transparent ${hoverTextColor} ${darkHoverTextColor}`
+      } h-full w-full transition-all ease-in-out motion-reduce:transition-none ${hoverShadow} dark:hover:shadow-[inset_0em_0em_0em_10em_rgba(1,1,1,0.12)]`}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
     >
