@@ -477,8 +477,25 @@ export function hasSingleSolution(
   filledCellsCount: number
 ): boolean {
   let solutionCount = 0;
+  const emptyCells = C.CELLS.filter((pos) => grid[pos].digit === 0);
+  const possibleDigits = new Map<string, Set<number>>();
+  for (const cell of emptyCells) {
+    const peers = C.PEERS.get(cell);
+    if (peers === undefined) {
+      continue;
+    }
+
+    const peerDigits = new Set(Array.from(peers).map((pos) => grid[pos].digit));
+
+    possibleDigits.set(cell, difference(digits, peerDigits));
+  }
+
+  emptyCells.sort(
+    (a, b) => possibleDigits.get(a)!.size - possibleDigits.get(b)!.size
+  );
+
   const solver = (grid: Cells, depth: number): boolean => {
-    for (const cellPos of C.CELLS) {
+    for (const cellPos of emptyCells) {
       if (grid[cellPos].digit !== 0) {
         continue;
       }
