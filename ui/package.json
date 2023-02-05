@@ -3,11 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "npx eslint src",
-    "lint:fix": "npm run lint -- --fix",
+    "lint": "pnpm exec eslint src",
+    "lint:fix": "pnpm run lint -- --fix",
     "test": "vitest",
     "coverage": "vitest run --coverage"
   },
@@ -33,6 +34,7 @@
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jsx-a11y": "^6.6.1",
     "eslint-plugin-react": "^7.31.8",
+    "globals": "link:@types/vitest/globals",
     "jsdom": "^20.0.0",
     "postcss": "^8.4.16",
     "prettier": "^2.7.1",
