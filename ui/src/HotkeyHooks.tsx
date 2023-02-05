@@ -1,5 +1,5 @@
-import useHotkey from "@/Hotkeys";
-import { useBoardStore } from "@/boardStore";
+import useHotkey from "./Hotkeys";
+import { useBoardStore } from "./boardStore";
 import shallow from "zustand/shallow";
 
 function HotkeyHooks() {

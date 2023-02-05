@@ -1,10 +1,10 @@
 import create from "zustand";
 import { devtools } from "zustand/middleware";
 import produce, { applyPatches, enablePatches, Patch } from "immer";
-import C from "@/constants";
-import { shuffled, range, difference, clamp } from "@/utilFuncs";
-import generateSudokuGrid from "@/sudokuWasm";
-import { broadcast } from "@/events";
+import C from "./constants";
+import { shuffled, range, difference, clamp } from "./utilFuncs";
+import generateSudokuGrid from "./sudokuWasm";
+import { broadcast } from "./events";
 
 enablePatches();
 

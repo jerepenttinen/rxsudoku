@@ -1,7 +1,7 @@
-import { useBoardStore } from "@/boardStore";
+import { useBoardStore } from "./boardStore";
 import shallow from "zustand/shallow";
-import Button from "@/Button";
-import { range } from "@/utilFuncs";
+import Button from "./Button";
+import { range } from "./utilFuncs";
 
 function HighlightButtons() {
   const [setHighlightedCandidates, highlightedCandidates] = useBoardStore(

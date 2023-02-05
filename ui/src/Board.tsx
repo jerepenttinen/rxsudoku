@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import { cross } from "@/utilFuncs";
-import { useBoardStore } from "@/boardStore";
+import { cross } from "./utilFuncs";
+import { useBoardStore } from "./boardStore";
 import shallow from "zustand/shallow";
 
 function Clickable({ cell, number }: { cell: string; number: number }) {

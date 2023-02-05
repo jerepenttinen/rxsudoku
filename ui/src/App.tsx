@@ -1,8 +1,8 @@
-import Board from "@/Board";
-import { HotkeyProvider } from "@/Hotkeys";
-import HotkeyHooks from "@/HotkeyHooks";
-import NewGame from "@/NewGame";
-import HighlightButtons from "@/HighlightButtons";
+import Board from "./Board";
+import { HotkeyProvider } from "./Hotkeys";
+import HotkeyHooks from "./HotkeyHooks";
+import NewGame from "./NewGame";
+import HighlightButtons from "./HighlightButtons";
 
 function App() {
   return (

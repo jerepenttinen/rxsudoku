@@ -1,4 +1,4 @@
-import MyWorker from "@/sudokuWasmWorker?worker";
+import MyWorker from "./sudokuWasmWorker?worker";
 
 let worker: Worker;
 if (window.Worker) {

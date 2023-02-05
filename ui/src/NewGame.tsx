@@ -1,5 +1,5 @@
-import { useBoardStore } from "@/boardStore";
-import Button from "@/Button";
+import { useBoardStore } from "./boardStore";
+import Button from "./Button";
 import { useCallback, useState } from "react";
 import shallow from "zustand/shallow";
 

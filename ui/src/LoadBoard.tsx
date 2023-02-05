@@ -1,5 +1,5 @@
 import { useRef, FormEvent } from "react";
-import { useBoardStore } from "@/boardStore";
+import { useBoardStore } from "./boardStore";
 
 function LoadBoard() {
   const loadGrid = useBoardStore((state) => state.loadGrid);
