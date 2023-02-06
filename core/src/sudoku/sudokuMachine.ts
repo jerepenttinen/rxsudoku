@@ -1,5 +1,5 @@
 import { assign, createMachine } from "xstate";
-import { Cells, Grid } from "../generator/types";
+import { Grid } from "../generator/types";
 import { generate, getPeerDigits, initializeGrid } from "../generator/sudoku";
 import constants from "../generator/constants";
 import { nextCell, nextCellBySubgrid } from "./movements";
@@ -109,8 +109,16 @@ export const sudokuMachine =
             if (event.type !== "SETCELL") {
               throw Error(`setCell called by ${event.type}`);
             }
-            context.grid.cells[event.cell].digit = event.digit;
-            return context.grid;
+            return {
+              ...context.grid,
+              cells: {
+                ...context.grid.cells,
+                [event.cell]: {
+                  ...context.grid.cells[event.cell],
+                  digit: event.digit,
+                },
+              },
+            };
           },
         }),
         eliminateMarks: assign({

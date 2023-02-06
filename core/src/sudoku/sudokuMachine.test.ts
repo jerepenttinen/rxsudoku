@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Direction, sudokuMachine } from "./sudokuMachine";
+import { sudokuMachine } from "./sudokuMachine";
 import { interpret } from "xstate";
 
 describe("grid generation", () => {
@@ -88,6 +88,7 @@ describe("setting cells", () => {
 
     const mock = interpret(mockSudokuMachine).onTransition((state) => {
       if (state.event.type === "SETCELL") {
+        expect(state.context.grid.cells.B1.digit).toBe(1);
         expect(state.context.grid.cells.A1.marks[1]).toBeFalsy();
         expect(state.context.grid.cells.A1.marks[2]).toBeTruthy();
         expect(state.context.grid.cells.C1.marks[1]).toBeFalsy();
