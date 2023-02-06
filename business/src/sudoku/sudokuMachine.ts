@@ -2,6 +2,7 @@ import { assign, createMachine } from "xstate";
 import { Cells, Grid } from "../generator/types";
 import { generate, getPeerDigits, initializeGrid } from "../generator/sudoku";
 import constants from "../generator/constants";
+import { nextCell, nextCellBySubgrid } from "./movements";
 
 type SudokuContext = {
   grid: Grid;
@@ -124,42 +125,11 @@ export const sudokuMachine =
               throw Error(`moveCursor called by ${event.type}`);
             }
 
-            const [row, col] = context.cursor.split("");
-            const colNum = Number.parseInt(col);
-            function toCell(r: string, c: string | number) {
-              return r + c;
+            if (event.subgrid) {
+              return nextCellBySubgrid(context.cursor, event.direction);
+            } else {
+              return nextCell(context.cursor, event.direction);
             }
-
-            switch (event.direction) {
-              case "left":
-                if (colNum > 1) {
-                  return toCell(row, colNum - 1);
-                }
-                break;
-              case "right":
-                if (colNum < 9) {
-                  return toCell(row, colNum + 1);
-                }
-                break;
-              case "up":
-                if (row > "A") {
-                  return toCell(
-                    String.fromCharCode(row.charCodeAt(0) - 1),
-                    col
-                  );
-                }
-                break;
-              case "down":
-                if (row < "I") {
-                  return toCell(
-                    String.fromCharCode(row.charCodeAt(0) + 1),
-                    col
-                  );
-                }
-                break;
-            }
-
-            return context.cursor;
           },
         }),
       },
