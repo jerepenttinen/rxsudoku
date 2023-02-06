@@ -100,3 +100,29 @@ describe("setting cells", () => {
     mock.send({ type: "SETCELL", cell: "B1", digit: 1 });
   });
 });
+
+describe("unde redo", () => {
+  it("should be able to undo setting cell and then redo", () => {
+    const mockSudokuMachine = sudokuMachine.withConfig({
+      actions: {
+        generateGrid: () => {},
+      },
+    });
+
+    const mock = interpret(mockSudokuMachine).onTransition((state) => {
+      if (state.event.type === "SETCELL") {
+        expect(state.context.grid.cells.A1.digit).toBe(1);
+      } else if (state.event.type === "UNDO") {
+        expect(state.context.grid.cells.A1.digit).toBe(0);
+      } else if (state.event.type === "REDO") {
+        expect(state.context.grid.cells.A1.digit).toBe(1);
+      }
+    });
+
+    mock.start();
+    mock.send({ type: "STARTGAME" });
+    mock.send({ type: "SETCELL", cell: "A1", digit: 1 });
+    mock.send({ type: "UNDO" });
+    mock.send({ type: "REDO" });
+  });
+});

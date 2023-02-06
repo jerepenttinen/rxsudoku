@@ -9,6 +9,8 @@ type SudokuContext = {
   cursor: string;
   timePassed: number;
   difficulty: number;
+  past: Grid[];
+  future: Grid[];
 };
 
 type DirectionValues = ["up", "down", "left", "right"];
@@ -18,13 +20,15 @@ type SudokuEvent =
   | { type: "STARTGAME" }
   | { type: "NEWGAME" }
   | { type: "RESETGAME" }
+  | { type: "UNDO" }
+  | { type: "REDO" }
   | { type: "SETCURSOR"; cell: string }
   | { type: "MOVECURSOR"; direction: Direction; subgrid?: boolean }
   | { type: "TOGGLEMARK"; cell: string; mark: number }
   | { type: "SETCELL"; cell: string; digit: number };
 
 export const sudokuMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0FpALqfgDYDEyAKgIIBK7A4p1wBRANoAGALqJQABwyx6pDOWkgAHogAcmqgE5dAJgCMmgOxjNYgCwA2c7oA0IAJ6IAzDbFUDAVjFiDGwNTXStA4IBfCKc0TBwCEgpqGSZ8ZwooKgB3fEVyOjAAJyIGZRZcAHkANSEAYQBVbmQK7nEpJBA5BVKVDo0EMx89Kx8DDzsfTUnNJ1cENzEbKit9fU9AnytFmyiY9Gw8IjJKKhS0jOzchnyikqVyFnYKvj4AGSFcHgBpNtUuxWUqn6mhsVj0blMIwhPlMml0Rjcs0QYTc3j8-l0cNMPh8NhsPl2IFiBwSx2SqXS5EyOTyBWKhB6LG4QmQQn4glEkj+8gBvVA-XxS0MJiMVkhPiM-kRLkQgV0VE0biVmylllMpkJxPiRySpwpFxp1zpdzKrPYtSEr1evw6-x6QPculRnjcBgC+nMCwMSIQgR0VgRHgCBl06rERgJ0SJ+21iROZ0p1KuFGNDPubDZDSaLRtsh59r6iHVSyMRlMpYhBl8HhmMoQfgMaP8WysmlLdl0OyjWsOceoWTKADkhAB1ATCXOdfP3B0IXRDEI2MwjSy2ew+uUKpVuFViNxqjXdmO9sl685UqgkMCELBZCgsSd2meF+adqhLowhqsmNz6H2jJYxXxEFMSMJd8U1Y9SV1BMLivG87weEQjHaPNumfflHSWD8v2MRU-zrGxJWWUx8R8UNFSIp0oijcgMAgOBVB7aDKG5dDARfABaSwfVsZZAx8JVOwDXFdEguIT11WgGGYNjeVnTiQx9IMmwCIIQjCdTxJJHV431Kk5ILTD5nDPRFmMawpksfwfB9QM9EDTxJnVTsxm02NT1gi9DRTW40w4tD5JffEvFLcsEVMKtBKXXjiP8ZtLPbRd3MkvTz0yeDbwoQyMPUdwVjMoJJVbSZ4tsutfzBAM7ElBFBhsNwrBSlj+wCqd2L5PKEE410N1MxVlS2PcDxoiIgA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0FpALqfgDYDEyAKgIIBK7A4p1wBRANoAGALqJQABwyx6pDOWkgAHogAcmqgE5dAJgCMmgOxjNYgCwA2c7oA0IAJ6IAzDbFUDAVjFiDGwNTXStA4IBfCKc0TBwCEgpqGSZ8ZwooKgB3fEVyOjAAJyIGZRZcAHkANSEAYQBVbmQK7nEpJBA5BVKVDo0EMx89Kx8DDzsfTUnNJ1cENzEbKit9fU9AnytFmyiY9Gw8IjJKKhS0jOzchnyikqVyFnYKvj4AGSFcHgBpNtUuxWUqn6mhsVj0blMIwhPlMml0Rjcs0QYTc3j8-l0cNMPh8NhsPl2IFiBwSx2SqXS5EyOTyBWKhB6LG4QmQQn4glEkj+8gBvVA-XxS0MJiMVkhPiM-kRLkQgV0VE0biVmylllMpkJxPiRySpwpFxp1zpdzKrPYtSEr1evw6-x6QPculRnjcBgC+nMCwMSIQgR0VgRHgCBl06rERgJ0SJ+21iROZ0p1KuFGNDPubDZDSaLRtsh59r6iHVSyMRlMpYhBl8HhmMoQfgMaP8WysmlLdl0OyjWsOcfJ5ypl1ptzTZXqADkACIVXOdfP3B310LLTRugxTTsh4w+-GmKg4oxO11WEY2IwGTUx3tkvUDpPD+mM5nT2d2heFhAhPcGWy6XG+DFIR3EYFQDOwLFBSZfEvOJr11BMLhIMBCCwLIKBYV950BD83E7KgbDbLdjEVfQfVGJYxXxEFMSMAj8RgkkdXjfVByQlC0IeEQjHaPNunfflHSWAjz0MYjcMcOszy8SicVDRUzydBjYxvLIynHIQAHUBGETC+OwgSED-KgQgI8VLFsewfTlBUlTcFUxDcNUNUJcgMAgOBVB7Ukkm5PS+XURAAFpLB9WxlkDIIfDcWwyzcIwlLgk5aAYZhfN5RdApDH0gybAIghCMJ8oS7zmLvNKCwMhYjD0RZjGsKZLH8HwfUDPRAyizsy3DLs9lgkr+0TIcjRHCq5z8xd8S8UtywRUwqyigjQslKh-Gber2xM4qmIGxDiGQ1CKHK-iAvmFYaqCSVW0mVbmrrXCwTA8tw0c7EbGira+2yfSxvSj9AtdKzwxs5UtgcpyoiiIA */
   createMachine<SudokuContext, SudokuEvent>(
     {
       predictableActionArguments: true,
@@ -51,6 +55,7 @@ export const sudokuMachine =
                 TOGGLEMARK: {
                   target: "waitinteraction",
                   internal: true,
+                  actions: ["addToPast"],
                 },
 
                 RESETGAME: "#SudokuMachine.playing",
@@ -58,13 +63,27 @@ export const sudokuMachine =
                 SETCELL: {
                   target: "checkwin",
                   cond: "isValidSetCell",
-                  actions: ["setCell", "eliminateMarks"],
+                  actions: ["addToPast", "setCell", "eliminateMarks"],
                 },
 
                 SETCURSOR: {
                   target: "waitinteraction",
                   cond: "isValidSetCursor",
                   actions: ["setCursor"],
+                  internal: true,
+                },
+
+                UNDO: {
+                  cond: "canUndo",
+                  actions: ["undo"],
+                  target: "waitinteraction",
+                  internal: true,
+                },
+
+                REDO: {
+                  cond: "canRedo",
+                  actions: ["redo"],
+                  target: "waitinteraction",
                   internal: true,
                 },
               },
@@ -95,6 +114,8 @@ export const sudokuMachine =
         cursor: "A1",
         timePassed: 0,
         difficulty: 30,
+        past: [],
+        future: [],
       },
       initial: "initial",
       id: "SudokuMachine",
@@ -157,6 +178,28 @@ export const sudokuMachine =
             }
           },
         }),
+        addToPast: assign((context) => ({
+          past: [...context.past, context.grid],
+          future: [],
+        })),
+        undo: assign((context) => {
+          const previous = context.past[context.past.length - 1];
+          const newPast = context.past.slice(0, context.past.length - 1);
+          return {
+            past: newPast,
+            grid: previous,
+            future: [context.grid, ...context.future],
+          };
+        }),
+        redo: assign((context) => {
+          const next = context.future[0];
+          const newFuture = context.future.slice(1);
+          return {
+            past: [...context.past, context.grid],
+            grid: next,
+            future: newFuture,
+          };
+        }),
       },
       guards: {
         isWin: (context, event) => false,
@@ -187,6 +230,8 @@ export const sudokuMachine =
 
           return constants.CELLS.includes(event.cell);
         },
+        canUndo: (context) => context.past.length > 0,
+        canRedo: (context) => context.future.length > 0,
       },
     }
   );
