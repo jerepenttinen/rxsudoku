@@ -69,5 +69,5 @@ export function nextCellBySubgrid(currentCell: string, direction: string) {
       return next(byBlock(rowNum, true), colNum);
   }
 
-  return "A1";
+  throw Error("unreachable");
 }
