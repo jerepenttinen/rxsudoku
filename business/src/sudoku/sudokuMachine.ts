@@ -16,16 +16,14 @@ export type Direction = DirectionValues[number];
 type SudokuEvent =
   | { type: "STARTGAME" }
   | { type: "NEWGAME" }
-  | { type: "WINGAME" }
   | { type: "RESETGAME" }
-  | { type: "CONTINUE" }
   | { type: "SETCURSOR"; cell: string }
   | { type: "MOVECURSOR"; direction: Direction; subgrid?: boolean }
   | { type: "TOGGLEMARK"; cell: string; mark: number }
   | { type: "SETCELL"; cell: string; digit: number };
 
 export const sudokuMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0FpALqfgDYDEyAKgIIBK7A4p1wBRANoAGALqJQABwyx6pDOWkgAHogAcmqgE5dAJgCMmgOxjNYgCwA2c7oA0IAJ6IAzDbFUDAVjFiDGwNTXStA4IBfCKc0TBwCEgpqGSZ8ZwooFgB1AEkAOQFhcSkkEDkFBmVVDQRQvX0Gn0tbeydXBCNdHypTP39TYK7AqyMomPRsPCIySioUtIyqAHd8RXI6MAAnIkryFlwAeQA1IQBhAFVuZAPuYtVyxSrSmrNu0J8DDzsmps029zENioVgauk8gR8VkBNjGIFikwSM2SqXS5Cgy1WDHWWx2Sj2hxOFyuN2Q5wAQnxuDkACJ3UoPXbVLRhKieXRuIxGNxg0xuNx-FzuHxA3z+MS6TS6XrCmHROETeLTJJzFGLFZrDbbQi7FjsA58PgAGSEuB4AGk6bJ5I8VM8tDYrHo3KYrD5nT5TJKuf8EGE3N4+uLJdKbDYfLD4YrErN5qj0eqsZrccoWNwhMghPxBKJJPdrYy7Qgw0DDCYjFYXT4jP43D7AroqJo+W5ITXLKZTBGFVNo8iFmiMRqcdq8WxM6chIbDZayvm8UzfTYG2JPWIPX53dy6y6qIGwtYrJoDJofOG5ZGe0iVf30SQwIQsEsKCxTgc8ux8uccyUrRV54XT39WwzAMIMbGrJofRBUwqDFAIoX0AwJTcKwuziS9lSWFM8iELJCm-PM-yeUAai6HowTMV1mjscU6yXRtm1bMR+RXTtz27RFlVjNVMQoJMRxTDN2CJa5blzek52I9REA7IFOVMTlnQMXwPAFdo-AMAN-ChQ9OTsMEojlcgMAgOBVAvTjKEIm0FwAWksKCYKbPk-BMXROWsNw0IRJVZloBhmGsgsSMQWykJ9DwvFFAIghCMJYu8qMr24tEgv-EKEDcMQjD0QFjGsE9LH8HwfS5bpmxQmxnSsEYOTY8Z0Msvs40HRNh2C2ciNtDKwy8eTFIGFSbDUxARi8OCdM0PSQllBqfN7a8WrvB8n26zqbMLFCG10PLq0PJoxRKwVMrqEY7GrLlXiq1D2Ma3zqCwtaGXS6SEFstwDDrbKGJcqFmPbNioiAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0FpALqfgDYDEyAKgIIBK7A4p1wBRANoAGALqJQABwyx6pDOWkgAHogAcmqgE5dAJgCMmgOxjNYgCwA2c7oA0IAJ6IAzDbFUDAVjFiDGwNTXStA4IBfCKc0TBwCEgpqGSZ8ZwooKgB3fEVyOjAAJyIGZRZcAHkANSEAYQBVbmQK7nEpJBA5BVKVDo0EMx89Kx8DDzsfTUnNJ1cENzEbKit9fU9AnytFmyiY9Gw8IjJKKhS0jOzchnyikqVyFnYKvj4AGSFcHgBpNtUuxWUqn6mhsVj0blMIwhPlMml0Rjcs0QYTc3j8-l0cNMPh8NhsPl2IFiBwSx2SqXS5EyOTyBWKhB6LG4QmQQn4glEkj+8gBvVA-XxS0MJiMVkhPiM-kRLkQgV0VE0biVmylllMpkJxPiRySpwpFxp1zpdzKrPYtSEr1evw6-x6QPculRnjcBgC+nMCwMSIQgR0VgRHgCBl06rERgJ0SJ+21iROZ0p1KuFGNDPubDZDSaLRtsh59r6iHVSyMRlMpYhBl8HhmMoQfgMaP8WysmlLdl0OyjWsOceoWTKADkhAB1ATCXOdfP3B0IXRDEI2MwjSy2ew+uUKpVuFViNxqjXdmO9sl685UqgkMCELBZCgsSd2meF+adqhLowhqsmNz6H2jJYxXxEFMSMJd8U1Y9SV1BMLivG87weEQjHaPNumfflHSWD8v2MRU-zrGxJWWUx8R8UNFSIp0oijcgMAgOBVB7aDKG5dDARfABaSwfVsZZAx8JVOwDXFdEguIT11WgGGYNjeVnTiQx9IMmwCIIQjCdTxJJHV431Kk5ILTD5nDPRFmMawpksfwfB9QM9EDTxJnVTsxm02NT1gi9DRTW40w4tD5JffEvFLcsEVMKtBKXXjiP8ZtLPbRd3MkvTz0yeDbwoQyMPUdwVjMoJJVbSZ4tsutfzBAM7ElBFBhsNwrBSlj+wCqd2L5PKEE410N1MxVlS2PcDxoiIgA */
   createMachine<SudokuContext, SudokuEvent>(
     {
       states: {
@@ -37,10 +35,6 @@ export const sudokuMachine =
 
         playing: {
           entry: ["generateGrid"],
-
-          on: {
-            WINGAME: "won",
-          },
 
           states: {
             waitinteraction: {
@@ -74,10 +68,13 @@ export const sudokuMachine =
             },
 
             checkwin: {
-              entry: ["checkWin"],
-              on: {
-                CONTINUE: "waitinteraction",
-              },
+              always: [
+                {
+                  target: "#SudokuMachine.won",
+                  cond: "isWin",
+                },
+                "waitinteraction",
+              ],
             },
           },
 
@@ -104,9 +101,6 @@ export const sudokuMachine =
         generateGrid: assign({
           grid: () => generate(30),
         }),
-        checkWin: async () => {
-          console.log("hei");
-        },
         setCell: assign({
           grid: (context, event) => {
             if (event.type !== "SETCELL") {
@@ -170,6 +164,7 @@ export const sudokuMachine =
         }),
       },
       guards: {
+        isWin: (context, event) => false,
         isValidSetCell: (context, event) => {
           if (event.type !== "SETCELL") {
             return false;

@@ -64,7 +64,6 @@ describe("cursor movement", () => {
     mock.start();
 
     mock.send({ type: "STARTGAME" });
-    mock.send({ type: "CONTINUE" });
 
     for (const input of inputs) {
       mock.send({ type: "SETCURSOR", cell: input.input });
@@ -118,7 +117,6 @@ describe("cursor movement", () => {
     mock.start();
 
     mock.send({ type: "STARTGAME" });
-    mock.send({ type: "CONTINUE" });
 
     for (const input of inputs) {
       mock.send({ type: "MOVECURSOR", direction: input.input });
