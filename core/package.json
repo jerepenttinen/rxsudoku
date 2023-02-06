@@ -1,5 +1,5 @@
 {
-  "name": "@rxsudoku/business",
+  "name": "@rxsudoku/core",
   "version": "1.0.0",
   "description": "",
   "type": "module",

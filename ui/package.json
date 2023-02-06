@@ -13,7 +13,7 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@rxsudoku/business": "*",
+    "@rxsudoku/core": "*",
     "immer": "^9.0.15",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",

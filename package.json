@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@rxsudoku/business": "link:business",
+    "@rxsudoku/core": "link:core",
     "@rxsudoku/ui": "link:ui"
   }
 }
