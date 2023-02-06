@@ -56,7 +56,7 @@ export const sudokuMachine =
                 SETCELL: {
                   target: "checkwin",
                   cond: "isValidSetCell",
-                  actions: ["setCell"],
+                  actions: ["setCell", "eliminateMarks"],
                 },
 
                 SETCURSOR: {
@@ -108,6 +108,21 @@ export const sudokuMachine =
               throw Error(`setCell called by ${event.type}`);
             }
             context.grid.cells[event.cell].digit = event.digit;
+            return context.grid;
+          },
+        }),
+        eliminateMarks: assign({
+          grid: (context, event) => {
+            if (event.type !== "SETCELL") {
+              throw Error(`eliminateMarks called by ${event.type}`);
+            }
+
+            const peers = constants.PEERS.get(event.cell);
+
+            for (const peer of peers) {
+              context.grid.cells[peer].marks[event.digit] = false;
+            }
+
             return context.grid;
           },
         }),

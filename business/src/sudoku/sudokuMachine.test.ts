@@ -72,3 +72,30 @@ describe("cursor movement", () => {
     mock.stop();
   });
 });
+
+describe("setting cells", () => {
+  it("should eliminate peer marks", () => {
+    const mockSudokuMachine = sudokuMachine.withConfig({
+      actions: {
+        generateGrid: (context) => {
+          context.grid.cells.A1.marks[1] = true;
+          context.grid.cells.A1.marks[2] = true;
+          context.grid.cells.C1.marks[1] = true;
+          return context.grid;
+        },
+      },
+    });
+
+    const mock = interpret(mockSudokuMachine).onTransition((state) => {
+      if (state.event.type === "SETCELL") {
+        expect(state.context.grid.cells.A1.marks[1]).toBeFalsy();
+        expect(state.context.grid.cells.A1.marks[2]).toBeTruthy();
+        expect(state.context.grid.cells.C1.marks[1]).toBeFalsy();
+      }
+    });
+
+    mock.start();
+    mock.send({ type: "STARTGAME" });
+    mock.send({ type: "SETCELL", cell: "B1", digit: 1 });
+  });
+});
