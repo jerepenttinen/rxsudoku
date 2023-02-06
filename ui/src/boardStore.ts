@@ -2,7 +2,7 @@ import create from "zustand";
 import { devtools } from "zustand/middleware";
 import produce, { applyPatches, enablePatches, Patch } from "immer";
 import C from "./constants";
-import { shuffled, range, difference, clamp } from "./utilFuncs";
+import { difference, clamp } from "./utilFuncs";
 import generateSudokuGrid from "./sudokuWasm";
 import { broadcast } from "./events";
 
@@ -397,142 +397,35 @@ export function setCellDigit(
   markUnfilledCellsDigit(state, C.PEERS.get(cellPos)!, lastDigit);
 }
 
-export function initializeGrid(state: BoardStore) {
-  // Initialize grid
-  for (const cell of C.CELLS) {
-    state.cells[cell] = {
-      digit: 0,
-      marks: emptyMarks(),
-      prefilled: false,
-      highlighted: false,
-      isCurrent: false,
-    } as Cell;
-  }
-  state.currentCell = "";
-  state.filled = 0;
-  state.highlightedCandidates = 0;
-}
-
-export function generateGrid(grid: Cells): boolean {
-  const digits = new Set(range(1, 10));
-  let cellPos = "";
-  for (cellPos of C.CELLS) {
-    if (grid[cellPos].digit === 0) {
-      const peer = C.PEERS.get(cellPos);
-      if (peer === undefined) {
-        continue;
-      }
-
-      const peerDigits = new Set(
-        Array.from(peer).map((pos) => grid[pos].digit)
-      );
-
-      const possibleDigits = shuffled(
-        Array.from(difference(digits, peerDigits))
-      );
-
-      for (const digit of possibleDigits) {
-        grid[cellPos].digit = digit;
-        if (
-          C.CELLS.map((pos) => grid[pos].digit).every((digit) => digit != 0) ||
-          generateGrid(grid)
-        ) {
-          return true;
-        }
-      }
-      break;
-    }
-  }
-  grid[cellPos].digit = 0;
-  return false;
-}
-
-export function removeDigitsFromGrid(grid: Cells, prefilledCellCount: number) {
-  const filledCells = shuffled(structuredClone(C.CELLS));
-  for (
-    let filledCellsCount = filledCells.length;
-    filledCellsCount > prefilledCellCount;
-    filledCellsCount--
-  ) {
-    const cellPos = filledCells.pop();
-    if (cellPos === undefined) {
-      break;
-    }
-    const cell = grid[cellPos];
-
-    const removedDigit = cell.digit;
-    cell.digit = 0;
-
-    if (!hasSingleSolution(structuredClone({ ...grid }), filledCellsCount)) {
-      cell.digit = removedDigit;
-      filledCellsCount++;
-    }
-  }
-}
-
-const digits = new Set(range(1, 10));
-
-export function hasSingleSolution(
-  grid: Cells,
-  filledCellsCount: number
-): boolean {
-  let solutionCount = 0;
-  const emptyCells = C.CELLS.filter((pos) => grid[pos].digit === 0);
-  const possibleDigits = new Map<string, Set<number>>();
-  for (const cell of emptyCells) {
-    const peers = C.PEERS.get(cell);
-    if (peers === undefined) {
+function markUnfilledCellsDigit(
+  state: BoardStore,
+  cells: string[] | Set<string>,
+  digit: number
+) {
+  for (const cellPos of cells) {
+    const cell = state.cells[cellPos];
+    if (cell.digit !== 0) {
       continue;
     }
 
-    const peerDigits = new Set(Array.from(peers).map((pos) => grid[pos].digit));
+    const possibleDigits = difference(digits, getPeerDigits(state, cellPos));
+    cell.marks[digit] = possibleDigits.has(digit);
 
-    possibleDigits.set(cell, difference(digits, peerDigits));
-  }
-
-  emptyCells.sort(
-    (a, b) => possibleDigits.get(a)!.size - possibleDigits.get(b)!.size
-  );
-
-  const solver = (grid: Cells, depth: number): boolean => {
-    for (const cellPos of emptyCells) {
-      if (grid[cellPos].digit !== 0) {
-        continue;
-      }
-
-      const peers = C.PEERS.get(cellPos);
-      if (peers === undefined) {
-        continue;
-      }
-
-      const peerDigits = new Set(
-        Array.from(peers).map((pos) => grid[pos].digit)
-      );
-
-      const possibleDigits = difference(digits, peerDigits);
-      for (const digit of possibleDigits) {
-        grid[cellPos].digit = digit;
-
-        if (depth === 81) {
-          solutionCount++;
-          break;
-        } else if (solver(grid, depth + 1)) {
-          return true;
-        }
-
-        if (solutionCount > 1) {
-          return false;
-        }
-      }
-      grid[cellPos].digit = 0;
-      break;
+    if (
+      state.highlightedCandidates !== 0 &&
+      cell.marks[state.highlightedCandidates]
+    ) {
+      cell.highlighted = true;
     }
-    return false;
-  };
-  solver(grid, filledCellsCount);
-  return solutionCount === 1;
+  }
 }
-
+export function getPeerDigits(state: BoardStore, cellPos: string) {
+  const peers = C.PEERS.get(cellPos);
+  if (peers === undefined) {
+    throw Error(`Cell position ${cellPos} not found from peers!`);
+  }
+  return new Set(Array.from(peers).map((pos) => state.cells[pos].digit));
+}
 export function loadGrid(state: BoardStore, newGrid: string) {
   const grid = newGrid
     .replaceAll(".", "0")
@@ -563,53 +456,6 @@ export function loadGrid(state: BoardStore, newGrid: string) {
   );
 }
 
-function markUnfilledCells(state: BoardStore, cells: string[] | Set<string>) {
-  for (const cellPos of cells) {
-    const cell = state.cells[cellPos];
-    if (cell.digit !== 0) {
-      continue;
-    }
-    const possibleDigits = difference(digits, getPeerDigits(state, cellPos));
-
-    for (const c of possibleDigits) {
-      cell.marks[c] = true;
-      if (state.highlightedCandidates === c) {
-        cell.highlighted = true;
-      }
-    }
-  }
-}
-
-function markUnfilledCellsDigit(
-  state: BoardStore,
-  cells: string[] | Set<string>,
-  digit: number
-) {
-  for (const cellPos of cells) {
-    const cell = state.cells[cellPos];
-    if (cell.digit !== 0) {
-      continue;
-    }
-
-    const possibleDigits = difference(digits, getPeerDigits(state, cellPos));
-    cell.marks[digit] = possibleDigits.has(digit);
-
-    if (
-      state.highlightedCandidates !== 0 &&
-      cell.marks[state.highlightedCandidates]
-    ) {
-      cell.highlighted = true;
-    }
-  }
-}
-export function getPeerDigits(state: BoardStore, cellPos: string) {
-  const peers = C.PEERS.get(cellPos);
-  if (peers === undefined) {
-    throw Error(`Cell position ${cellPos} not found from peers!`);
-  }
-  return new Set(Array.from(peers).map((pos) => state.cells[pos].digit));
-}
-
 export function toggleCellMark(
   state: BoardStore,
   cellPos: string,
@@ -632,4 +478,21 @@ export function toggleCellMark(
 
   cell.marks[mark] = !cell.marks[mark];
   cell.highlighted = cell.marks[state.highlightedCandidates];
+}
+
+function markUnfilledCells(state: BoardStore, cells: string[] | Set<string>) {
+  for (const cellPos of cells) {
+    const cell = state.cells[cellPos];
+    if (cell.digit !== 0) {
+      continue;
+    }
+    const possibleDigits = difference(digits, getPeerDigits(state, cellPos));
+
+    for (const c of possibleDigits) {
+      cell.marks[c] = true;
+      if (state.highlightedCandidates === c) {
+        cell.highlighted = true;
+      }
+    }
+  }
 }

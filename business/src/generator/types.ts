@@ -22,3 +22,9 @@ export type Cells = {
     marks: Marks;
   };
 };
+
+export type Grid = {
+  cells: Cells;
+  highlighted: Set<string>;
+  prefilled: Set<string>;
+};
