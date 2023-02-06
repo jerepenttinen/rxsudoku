@@ -1,3 +1,3 @@
 packages:
-  - "@rx-sudoku/ui"
-  - "@rx-sudoku/business"
+  - "@rxsudoku/ui"
+  - "@rxsudoku/business"

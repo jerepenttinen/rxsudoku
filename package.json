@@ -1,5 +1,5 @@
 {
-  "name": "rx-sudoku",
+  "name": "rxsudoku",
   "version": "1.0.0",
   "description": "",
   "scripts": {
@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@rx-sudoku/business": "link:business",
-    "@rx-sudoku/ui": "link:ui"
+    "@rxsudoku/business": "link:business",
+    "@rxsudoku/ui": "link:ui"
   }
 }

@@ -1,11 +1,10 @@
 lockfileVersion: 5.4
 
 importers:
-
   .:
     specifiers:
-      '@rx-sudoku/business': link:business
-      '@rx-sudoku/ui': link:ui
+      "@rxsudoku/business": link:business
+      "@rxsudoku/ui": link:ui
     dependencies:
-      '@rx-sudoku/business': link:business
-      '@rx-sudoku/ui': link:ui
+      "@rxsudoku/business": link:business
+      "@rxsudoku/ui": link:ui
