@@ -1,3 +1,4 @@
 packages:
   - "@rxsudoku/ui"
+  - "@rxsudoku/ui-react"
   - "@rxsudoku/core"

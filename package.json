@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@rxsudoku/core": "link:core",
-    "@rxsudoku/ui": "link:ui"
+    "@rxsudoku/ui": "link:ui",
+    "@rxsudoku/ui-react": "link:ui-react"
   }
 }
