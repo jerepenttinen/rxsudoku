@@ -150,11 +150,12 @@ export const sudokuMachine =
 
             const peers = constants.PEERS.get(event.cell);
 
+            const newCells = structuredClone(context.grid.cells);
             for (const peer of peers) {
-              context.grid.cells[peer].marks[event.digit] = false;
+              newCells[peer].marks[event.digit] = false;
             }
 
-            return context.grid;
+            return { ...context.grid, cells: newCells };
           },
         }),
         setCursor: assign({
