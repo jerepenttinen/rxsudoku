@@ -22,13 +22,14 @@ type SudokuEvent =
   | { type: "RESETGAME" }
   | { type: "UNDO" }
   | { type: "REDO" }
+  | { type: "HIGHLIGHT"; digit: number }
   | { type: "SETCURSOR"; cell: string }
   | { type: "MOVECURSOR"; direction: Direction; subgrid?: boolean }
   | { type: "TOGGLEMARK"; cell: string; mark: number }
   | { type: "SETCELL"; cell: string; digit: number };
 
 export const sudokuMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0FpALqfgDYDEyAKgIIBK7A4p1wBRANoAGALqJQABwyx6pDOWkgAHogAcmqgE5dAJgCMmgOxjNYgCwA2c7oA0IAJ6IAzDbFUDAVjFiDGwNTXStA4IBfCKc0TBwCEgpqGSZ8ZwooKgB3fEVyOjAAJyIGZRZcAHkANSEAYQBVbmQK7nEpJBA5BVKVDo0EMx89Kx8DDzsfTUnNJ1cENzEbKit9fU9AnytFmyiY9Gw8IjJKKhS0jOzchnyikqVyFnYKvj4AGSFcHgBpNtUuxWUqn6mhsVj0blMIwhPlMml0Rjcs0QYTc3j8-l0cNMPh8NhsPl2IFiBwSx2SqXS5EyOTyBWKhB6LG4QmQQn4glEkj+8gBvVA-XxS0MJiMVkhPiM-kRLkQgV0VE0biVmylllMpkJxPiRySpwpFxp1zpdzKrPYtSEr1evw6-x6QPculRnjcBgC+nMCwMSIQgR0VgRHgCBl06rERgJ0SJ+21iROZ0p1KuFGNDPubDZDSaLRtsh59r6iHVSyMRlMpYhBl8HhmMoQfgMaP8WysmlLdl0OyjWsOcfJ5ypl1ptzTZXqADkACIVXOdfP3B310LLTRugxTTsh4w+-GmKg4oxO11WEY2IwGTUx3tkvUDpPD+mM5nT2d2heFhAhPcGWy6XG+DFIR3EYFQDOwLFBSZfEvOJr11BMLhIMBCCwLIKBYV950BD83E7KgbDbLdjEVfQfVGJYxXxEFMSMAj8RgkkdXjfVByQlC0IeEQjHaPNunfflHSWAjz0MYjcMcOszy8SicVDRUzydBjYxvLIynHIQAHUBGETC+OwgSED-KgQgI8VLFsewfTlBUlTcFUxDcNUNUJcgMAgOBVB7Ukkm5PS+XURAAFpLB9WxlkDIIfDcWwyzcIwlLgk5aAYZhfN5RdApDH0gybAIghCMJ8oS7zmLvNKCwMhYjD0RZjGsKZLH8HwfUDPRAyizsy3DLs9lgkr+0TIcjRHCq5z8xd8S8UtywRUwqyigjQslKh-Gber2xM4qmIGxDiGQ1CKHK-iAvmFYaqCSVW0mVbmrrXCwTA8tw0c7EbGira+2yfSxvSj9AtdKzwxs5UtgcpyoiiIA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0FpALqfgDYDEyAKgIIBK7A4p1wBRANoAGALqJQABwyx6pDOWkgAHogAcmqgE5dAJgCMmgOxjNYgCwA2c7oA0IAJ6IAzDbFUDAVjFiDGwNTXStA4IBfCKc0TBwCEgpqGSZ8ZwooKgB3fEVyOjAAJyIGZRZcAHkANSEAYQBVbmQK7nEpJBA5BVKVDo0EMx89Kx8DDzsfTUnNJ1cENzEbKit9fU9AnytFmyiY9Gw8IjJKKhS0jOzchnyikqVyFnYKvj4AGSFcHgBpNtUuxWUqn6mhsVj0blMIwhPlMml0Rjcs0QYTc3j8-l0cNMPh8NhsPl2IFiBwSx2SqXS5EyOTyBWKhB6LG4QmQQn4glEkj+8gBvVA-XxS0MJiMVkhPiM-kRLkQgV0VE0biVmylllMpkJxPiRySpwpFxp1zpdzKrPYtSEr1evw6-x6QPculRnjcBgC+nMCwMSIQgR0VgRHgCBl06rERgJ0SJ+21iROZ0p1KuFGNDPubDZDSaLRtsh59r6iHVSyMRlMpYhBl8HhmMoQfgMaP8WysmlLdl0OyjWsOcfJ5ypl1ptzTZXqADkACIVXOdfP3B310LLTRugxTTsh4w+-GmKg4oxO11WEY2IwGTUx3tkvUDpPD+mM5nT2d2heFhAhPcGWy6XG+DFIR3EYFQDOwLFBSZfEvOJr11BMLhIMBCCwLIKBYV950BD83E7KgbDbLdjEVfQfVGJYxXxEFMSMAj8RgkkdXjfVByQlC0IeEQjHaPNunfflHSWAjz0MYjcMcOszy8SicVDRUzydBjYxvLIynHIQAHUBGETC+OwgSED-KgQgI8VLFsewfTlBUlTcFUxDcNUNW7K9SXglj7yNEdGQACQAST4HzXgCnz2F03lF1bMEbFw2KHLEUYop9FYdDhOz1WCV0Iz-KIo3IDAIDgVQezcyhuT0vl1EQABaSxkoowMoL8LKVisJS4JOWgGGYcqIo-aqQx9IMmwCIIQjCMb2tK-tE16gsDIWIw9EWYxrCmSx-B8H1Az0QMzwWNwTA8SM9lg6bb0TIcvMffi5wqxd8S8UtywRUwqx8GtkslKh-GbNb2xMqamJmxDiGQ1CKDm27+jcFZlqCSVW0mX6trrXCwTA8tw0c7EYralyzuB7J9LuvqDOq10rPDGzlS2BynNyiIgA */
   createMachine<SudokuContext, SudokuEvent>(
     {
       predictableActionArguments: true,
@@ -84,6 +85,12 @@ export const sudokuMachine =
                 REDO: {
                   cond: "canRedo",
                   actions: ["redo"],
+                  target: "waitinteraction",
+                  internal: true,
+                },
+
+                HIGHLIGHT: {
+                  actions: ["highlight"],
                   target: "waitinteraction",
                   internal: true,
                 },
@@ -150,7 +157,6 @@ export const sudokuMachine =
             }
 
             const marks = structuredClone(context.grid.cells[event.cell].marks);
-            console.log(marks);
             marks[event.mark] = !marks[event.mark];
 
             return {
@@ -200,6 +206,21 @@ export const sudokuMachine =
             } else {
               return nextCell(context.cursor, event.direction);
             }
+          },
+        }),
+        highlight: assign({
+          grid: (context, event) => {
+            if (event.type !== "HIGHLIGHT") {
+              throw Error(`highlight called by ${event.type}`);
+            }
+            context.grid.highlighted = new Set();
+            for (const cell of constants.CELLS) {
+              const marks = context.grid.cells[cell].marks;
+              if (marks[event.digit]) {
+                context.grid.highlighted.add(cell);
+              }
+            }
+            return context.grid;
           },
         }),
         addToPast: assign((context) => ({

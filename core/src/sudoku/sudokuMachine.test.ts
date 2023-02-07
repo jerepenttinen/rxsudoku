@@ -1,13 +1,33 @@
-import { describe, expect, it } from "vitest";
-import { sudokuMachine } from "./sudokuMachine";
+import { beforeEach, describe, expect, it } from "vitest";
 import { interpret } from "xstate";
+import { sudokuMachine } from "./sudokuMachine";
 import { initializeGrid } from "../generator/sudoku";
+
+let mockMachine = sudokuMachine;
+
+beforeEach(() => {
+  mockMachine = mockMachine.withConfig(
+    {
+      actions: {
+        generateGrid: () => {},
+      },
+    },
+    {
+      grid: initializeGrid(),
+      cursor: "A1",
+      timePassed: 0,
+      difficulty: 30,
+      past: [],
+      future: [],
+    }
+  );
+});
 
 describe("grid generation", () => {
   it("should generate new grid when starting game", () => {
     let gridGenerated = false;
 
-    const mockSudokuMachine = sudokuMachine.withConfig({
+    const mockSudokuMachine = mockMachine.withConfig({
       actions: {
         generateGrid: () => {
           gridGenerated = true;
@@ -49,13 +69,7 @@ describe("cursor movement", () => {
       },
     ];
 
-    const mockSudokuMachine = sudokuMachine.withConfig({
-      actions: {
-        generateGrid: () => {},
-      },
-    });
-
-    const mock = interpret(mockSudokuMachine).onTransition((state) => {
+    const mock = interpret(mockMachine).onTransition((state) => {
       if (state.event.type === "SETCURSOR" && current < inputs.length) {
         expect(state.context.cursor).toBe(inputs[current].expected);
         current++;
@@ -75,61 +89,8 @@ describe("cursor movement", () => {
 });
 
 describe("setting cells", () => {
-  it("should toggle mark", () => {
-    let current = 0;
-    const expected = [true, false, true, false];
-    const mark = 1;
-    const cellPos = "A1";
-
-    const mockSudokuMachine = sudokuMachine.withConfig({
-      actions: {
-        generateGrid: () => {},
-      },
-    });
-
-    const mock = interpret(mockSudokuMachine).onTransition((state) => {
-      if (state.event.type === "TOGGLEMARK" && current < expected.length) {
-        const input = expected[current];
-        const cell = state.context.grid.cells[cellPos];
-        expect(cell.marks[mark]).toBe(input);
-        current++;
-      }
-    });
-
-    mock.start();
-    mock.send({ type: "STARTGAME" });
-
-    for (const _ of expected) {
-      mock.send({ type: "TOGGLEMARK", cell: cellPos, mark: mark });
-    }
-  });
-
-  it("should not allow to toggle with peer that has marked digit", () => {
-    const cellPos = "A1";
-    const peerPos = "B2";
-    const mark = 1;
-    const mockSudokuMachine = sudokuMachine.withConfig({
-      actions: {
-        generateGrid: () => {},
-      },
-    });
-
-    const mock = interpret(mockSudokuMachine).onTransition((state) => {
-      if (state.event.type === "TOGGLEMARK") {
-        const cell = state.context.grid.cells[cellPos];
-        expect(cell.marks[mark]).toBe(false);
-      }
-    });
-
-    mock.start();
-    mock.send({ type: "STARTGAME" });
-
-    mock.send({ type: "SETCELL", cell: peerPos, digit: mark });
-    mock.send({ type: "TOGGLEMARK", cell: cellPos, mark: mark });
-  });
-
   it("should eliminate peer marks", () => {
-    const mockSudokuMachine = sudokuMachine.withConfig({
+    const mockSudokuMachine = mockMachine.withConfig({
       actions: {
         generateGrid: (context) => {
           context.grid.cells.A1.marks[1] = true;
@@ -153,17 +114,53 @@ describe("setting cells", () => {
     mock.send({ type: "STARTGAME" });
     mock.send({ type: "SETCELL", cell: "B1", digit: 1 });
   });
+
+  it("should toggle mark", () => {
+    let current = 0;
+    const expected = [true, false, true, false];
+    const mark = 1;
+    const cellPos = "A1";
+
+    const mock = interpret(mockMachine).onTransition((state) => {
+      if (state.event.type === "TOGGLEMARK" && current < expected.length) {
+        const input = expected[current];
+        const cell = state.context.grid.cells[cellPos];
+        expect(cell.marks[mark]).toBe(input);
+        current++;
+      }
+    });
+
+    mock.start();
+    mock.send({ type: "STARTGAME" });
+
+    for (const _ of expected) {
+      mock.send({ type: "TOGGLEMARK", cell: cellPos, mark: mark });
+    }
+  });
+
+  it("should not allow to toggle with peer that has marked digit", () => {
+    const cellPos = "A1";
+    const peerPos = "B2";
+    const mark = 1;
+
+    const mock = interpret(mockMachine).onTransition((state) => {
+      if (state.event.type === "TOGGLEMARK") {
+        const cell = state.context.grid.cells[cellPos];
+        expect(cell.marks[mark]).toBe(false);
+      }
+    });
+
+    mock.start();
+    mock.send({ type: "STARTGAME" });
+
+    mock.send({ type: "SETCELL", cell: peerPos, digit: mark });
+    mock.send({ type: "TOGGLEMARK", cell: cellPos, mark: mark });
+  });
 });
 
 describe("unde redo", () => {
   it("should be able to undo setting cell and then redo", () => {
-    const mockSudokuMachine = sudokuMachine.withConfig({
-      actions: {
-        generateGrid: () => {},
-      },
-    });
-
-    const mock = interpret(mockSudokuMachine).onTransition((state) => {
+    const mock = interpret(mockMachine).onTransition((state) => {
       if (state.event.type === "SETCELL") {
         expect(state.context.grid.cells.A1.digit).toBe(1);
       } else if (state.event.type === "UNDO") {
@@ -178,5 +175,44 @@ describe("unde redo", () => {
     mock.send({ type: "SETCELL", cell: "A1", digit: 1 });
     mock.send({ type: "UNDO" });
     mock.send({ type: "REDO" });
+  });
+});
+
+describe("highlighting", () => {
+  it("should highlight cells with corresponding marks", () => {
+    const mock = interpret(mockMachine).onTransition((state) => {
+      if (state.event.type !== "HIGHLIGHT") {
+        return;
+      }
+
+      switch (state.event.digit) {
+        case 1:
+          expect(state.context.grid.highlighted).toContain("A1");
+          expect(state.context.grid.highlighted).toHaveLength(1);
+          break;
+        case 2:
+          expect(state.context.grid.highlighted).toContain("A2");
+          expect(state.context.grid.highlighted).toHaveLength(1);
+          break;
+        case 3:
+          expect(state.context.grid.highlighted).toHaveLength(0);
+          break;
+        case 0:
+          expect(state.context.grid.highlighted).toHaveLength(0);
+          break;
+      }
+    });
+
+    mock.start();
+    mock.send({ type: "STARTGAME" });
+
+    mock.send({ type: "TOGGLEMARK", cell: "A1", mark: 1 });
+    mock.send({ type: "TOGGLEMARK", cell: "A2", mark: 2 });
+
+    mock.send({ type: "HIGHLIGHT", digit: 1 });
+    mock.send({ type: "HIGHLIGHT", digit: 2 });
+    mock.send({ type: "HIGHLIGHT", digit: 3 });
+    mock.send({ type: "HIGHLIGHT", digit: 1 });
+    mock.send({ type: "HIGHLIGHT", digit: 0 });
   });
 });
