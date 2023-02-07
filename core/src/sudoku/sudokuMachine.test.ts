@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { sudokuMachine } from "./sudokuMachine";
 import { interpret } from "xstate";
+import { initializeGrid } from "../generator/sudoku";
 
 describe("grid generation", () => {
   it("should generate new grid when starting game", () => {
@@ -74,6 +75,59 @@ describe("cursor movement", () => {
 });
 
 describe("setting cells", () => {
+  it("should toggle mark", () => {
+    let current = 0;
+    const expected = [true, false, true, false];
+    const mark = 1;
+    const cellPos = "A1";
+
+    const mockSudokuMachine = sudokuMachine.withConfig({
+      actions: {
+        generateGrid: () => {},
+      },
+    });
+
+    const mock = interpret(mockSudokuMachine).onTransition((state) => {
+      if (state.event.type === "TOGGLEMARK" && current < expected.length) {
+        const input = expected[current];
+        const cell = state.context.grid.cells[cellPos];
+        expect(cell.marks[mark]).toBe(input);
+        current++;
+      }
+    });
+
+    mock.start();
+    mock.send({ type: "STARTGAME" });
+
+    for (const _ of expected) {
+      mock.send({ type: "TOGGLEMARK", cell: cellPos, mark: mark });
+    }
+  });
+
+  it("should not allow to toggle with peer that has marked digit", () => {
+    const cellPos = "A1";
+    const peerPos = "B2";
+    const mark = 1;
+    const mockSudokuMachine = sudokuMachine.withConfig({
+      actions: {
+        generateGrid: () => {},
+      },
+    });
+
+    const mock = interpret(mockSudokuMachine).onTransition((state) => {
+      if (state.event.type === "TOGGLEMARK") {
+        const cell = state.context.grid.cells[cellPos];
+        expect(cell.marks[mark]).toBe(false);
+      }
+    });
+
+    mock.start();
+    mock.send({ type: "STARTGAME" });
+
+    mock.send({ type: "SETCELL", cell: peerPos, digit: mark });
+    mock.send({ type: "TOGGLEMARK", cell: cellPos, mark: mark });
+  });
+
   it("should eliminate peer marks", () => {
     const mockSudokuMachine = sudokuMachine.withConfig({
       actions: {

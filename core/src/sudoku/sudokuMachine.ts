@@ -53,9 +53,10 @@ export const sudokuMachine =
                 },
 
                 TOGGLEMARK: {
+                  cond: "isValidToggleMark",
                   target: "waitinteraction",
                   internal: true,
-                  actions: ["addToPast"],
+                  actions: ["addToPast", "toggleMark"],
                 },
 
                 RESETGAME: "#SudokuMachine.playing",
@@ -137,6 +138,28 @@ export const sudokuMachine =
                 [event.cell]: {
                   ...context.grid.cells[event.cell],
                   digit: event.digit,
+                },
+              },
+            };
+          },
+        }),
+        toggleMark: assign({
+          grid: (context, event) => {
+            if (event.type !== "TOGGLEMARK") {
+              throw Error(`toggleMark called by ${event.type}`);
+            }
+
+            const marks = structuredClone(context.grid.cells[event.cell].marks);
+            console.log(marks);
+            marks[event.mark] = !marks[event.mark];
+
+            return {
+              ...context.grid,
+              cells: {
+                ...context.grid.cells,
+                [event.cell]: {
+                  ...context.grid.cells[event.cell],
+                  marks,
                 },
               },
             };
@@ -230,6 +253,14 @@ export const sudokuMachine =
           }
 
           return constants.CELLS.includes(event.cell);
+        },
+        isValidToggleMark: (context, event) => {
+          if (event.type !== "TOGGLEMARK") {
+            return false;
+          }
+
+          const peerDigits = getPeerDigits(context.grid.cells, event.cell);
+          return !peerDigits.has(event.mark);
         },
         canUndo: (context) => context.past.length > 0,
         canRedo: (context) => context.future.length > 0,
