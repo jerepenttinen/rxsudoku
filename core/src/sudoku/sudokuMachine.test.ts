@@ -17,6 +17,7 @@ beforeEach(() => {
       cursor: "A1",
       timePassed: 0,
       difficulty: 30,
+      highlight: 0,
       past: [],
       future: [],
     }
@@ -185,36 +186,14 @@ describe("highlighting", () => {
         return;
       }
 
-      switch (state.event.digit) {
-        case 1:
-          expect(state.context.grid.highlighted).toContain("A1");
-          expect(state.context.grid.highlighted).toHaveLength(1);
-          break;
-        case 2:
-          expect(state.context.grid.highlighted).toContain("A2");
-          expect(state.context.grid.highlighted).toHaveLength(1);
-          break;
-        case 3:
-          expect(state.context.grid.highlighted).toHaveLength(0);
-          break;
-        case 0:
-          expect(state.context.grid.highlighted).toHaveLength(0);
-          break;
-      }
-
-      expect(state.context.grid.highlightDigit).toBe(state.event.digit);
+      expect(state.context.highlight).toBe(state.event.digit);
     });
 
     mock.start();
     mock.send({ type: "STARTGAME" });
 
-    mock.send({ type: "TOGGLEMARK", cell: "A1", mark: 1 });
-    mock.send({ type: "TOGGLEMARK", cell: "A2", mark: 2 });
-
     mock.send({ type: "HIGHLIGHT", digit: 1 });
     mock.send({ type: "HIGHLIGHT", digit: 2 });
-    mock.send({ type: "HIGHLIGHT", digit: 3 });
-    mock.send({ type: "HIGHLIGHT", digit: 1 });
     mock.send({ type: "HIGHLIGHT", digit: 0 });
   });
 });

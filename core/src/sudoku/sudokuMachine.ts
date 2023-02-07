@@ -9,6 +9,7 @@ type SudokuContext = {
   cursor: string;
   timePassed: number;
   difficulty: number;
+  highlight: number;
   past: Grid[];
   future: Grid[];
 };
@@ -122,6 +123,7 @@ export const sudokuMachine =
         cursor: "A1",
         timePassed: 0,
         difficulty: 30,
+        highlight: 0,
         past: [],
         future: [],
       },
@@ -209,23 +211,12 @@ export const sudokuMachine =
           },
         }),
         highlight: assign({
-          grid: (context, event) => {
+          highlight: (context, event) => {
             if (event.type !== "HIGHLIGHT") {
               throw Error(`highlight called by ${event.type}`);
             }
-            const highlighted = new Set<string>();
 
-            for (const cell of constants.CELLS) {
-              const marks = context.grid.cells[cell].marks;
-              if (marks[event.digit]) {
-                highlighted.add(cell);
-              }
-            }
-            return {
-              ...context.grid,
-              highlighted,
-              highlightDigit: event.digit,
-            };
+            return event.digit;
           },
         }),
         addToPast: assign((context) => ({

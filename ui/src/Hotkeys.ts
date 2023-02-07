@@ -67,7 +67,7 @@ createShortcut(["T"], () => {
   sudoku.send({
     type: "TOGGLEMARK",
     cell: sudoku.state.context.cursor,
-    mark: sudoku.state.context.grid.highlightDigit,
+    mark: sudoku.state.context.highlight,
   });
 });
 
@@ -75,6 +75,6 @@ createShortcut(["F"], () => {
   sudoku.send({
     type: "SETCELL",
     cell: sudoku.state.context.cursor,
-    digit: sudoku.state.context.grid.highlightDigit,
+    digit: sudoku.state.context.highlight,
   });
 });

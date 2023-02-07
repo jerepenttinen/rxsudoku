@@ -12,7 +12,8 @@ function Mark({ cell, number }: { cell: string; number: number }) {
   const handleDoubleClick = () =>
     sudoku.send({ type: "SETCELL", cell, digit: number });
 
-  const highlighted = () => context.grid.highlighted.has(cell);
+  const highlighted = () =>
+    context.grid.cells[cell].marks[context.highlight] ?? false;
 
   const textColor = !highlighted() ? "text-zinc-700" : "text-blue-800";
   const darkTextColor = !highlighted()
@@ -53,7 +54,8 @@ function Cell({ cell }: { cell: string }) {
 
   const digit = () => context.grid.cells[cell].digit;
   const prefilled = () => context.grid.prefilled.has(cell);
-  const highlighted = () => context.grid.highlighted.has(cell);
+  const highlighted = () =>
+    context.grid.cells[cell].marks[context.highlight] ?? false;
 
   return (
     <div
