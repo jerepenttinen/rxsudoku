@@ -11,7 +11,7 @@ for (let i = 0; i <= 9; i++) {
       type: "TOGGLEMARK",
       cell: sudoku.state.context.cursor,
       mark: i,
-    })
+    }),
   );
 
   // TODO: doesn't work, due to the fact that pressed button might be the special character behind number
@@ -27,37 +27,37 @@ for (let i = 0; i <= 9; i++) {
       type: "SETCELL",
       cell: sudoku.state.context.cursor,
       digit: i,
-    })
+    }),
   );
 }
 
 // TODO: add support for holding
 createShortcut(["ArrowUp"], () =>
-  sudoku.send({ type: "MOVECURSOR", direction: "up" })
+  sudoku.send({ type: "MOVECURSOR", direction: "up" }),
 );
 createShortcut(["Control", "ArrowUp"], () =>
-  sudoku.send({ type: "MOVECURSOR", direction: "up", subgrid: true })
+  sudoku.send({ type: "MOVECURSOR", direction: "up", subgrid: true }),
 );
 
 createShortcut(["ArrowDown"], () =>
-  sudoku.send({ type: "MOVECURSOR", direction: "down" })
+  sudoku.send({ type: "MOVECURSOR", direction: "down" }),
 );
 createShortcut(["Control", "ArrowDown"], () =>
-  sudoku.send({ type: "MOVECURSOR", direction: "down", subgrid: true })
+  sudoku.send({ type: "MOVECURSOR", direction: "down", subgrid: true }),
 );
 
 createShortcut(["ArrowLeft"], () =>
-  sudoku.send({ type: "MOVECURSOR", direction: "left" })
+  sudoku.send({ type: "MOVECURSOR", direction: "left" }),
 );
 createShortcut(["Control", "ArrowLeft"], () =>
-  sudoku.send({ type: "MOVECURSOR", direction: "left", subgrid: true })
+  sudoku.send({ type: "MOVECURSOR", direction: "left", subgrid: true }),
 );
 
 createShortcut(["ArrowRight"], () =>
-  sudoku.send({ type: "MOVECURSOR", direction: "right" })
+  sudoku.send({ type: "MOVECURSOR", direction: "right" }),
 );
 createShortcut(["Control", "ArrowRight"], () =>
-  sudoku.send({ type: "MOVECURSOR", direction: "right", subgrid: true })
+  sudoku.send({ type: "MOVECURSOR", direction: "right", subgrid: true }),
 );
 
 createShortcut(["U"], () => sudoku.send({ type: "UNDO" }));
