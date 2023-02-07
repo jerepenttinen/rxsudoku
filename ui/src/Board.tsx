@@ -12,19 +12,19 @@ function Mark({ cell, number }: { cell: string; number: number }) {
   const handleDoubleClick = () =>
     sudoku.send({ type: "SETCELL", cell, digit: number });
 
-  const highlighted = false;
+  const highlighted = () => context.grid.highlighted.has(cell);
 
-  const textColor = !highlighted ? "text-zinc-700" : "text-blue-800";
-  const darkTextColor = !highlighted
+  const textColor = !highlighted() ? "text-zinc-700" : "text-blue-800";
+  const darkTextColor = !highlighted()
     ? "dark:text-zinc-300"
     : "dark:text-blue-200";
-  const hoverTextColor = !highlighted
+  const hoverTextColor = !highlighted()
     ? "hover:text-zinc-700/60"
     : "hover:text-blue-800/60";
-  const darkHoverTextColor = !highlighted
+  const darkHoverTextColor = !highlighted()
     ? "dark:hover:text-zinc-300/60"
     : "dark:hover:text-blue-200/60";
-  const hoverShadow = !highlighted
+  const hoverShadow = !highlighted()
     ? "hover:shadow-[inset_0em_0em_0em_5em_rgba(0,0,0,0.12)]"
     : "hover:shadow-[inset_0em_0em_0em_5em_rgba(29,78,216,0.15)]";
 

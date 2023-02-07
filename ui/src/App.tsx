@@ -1,4 +1,4 @@
-import type { Component } from "solid-js";
+import "./Hotkeys";
 import Board from "./Board";
 
 function App() {

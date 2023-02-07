@@ -25,6 +25,7 @@ export type Cells = {
 
 export type Grid = {
   cells: Cells;
+  highlightDigit: number;
   highlighted: Set<string>;
   prefilled: Set<string>;
 };

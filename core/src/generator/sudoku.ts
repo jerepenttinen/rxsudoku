@@ -5,6 +5,7 @@ import { difference, range, shuffled } from "./utils";
 export function initializeGrid(): Grid {
   const result: Grid = {
     cells: {},
+    highlightDigit: 0,
     highlighted: new Set(),
     prefilled: new Set(),
   };

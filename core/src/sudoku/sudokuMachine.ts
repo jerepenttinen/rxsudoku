@@ -213,14 +213,19 @@ export const sudokuMachine =
             if (event.type !== "HIGHLIGHT") {
               throw Error(`highlight called by ${event.type}`);
             }
-            context.grid.highlighted = new Set();
+            const highlighted = new Set<string>();
+
             for (const cell of constants.CELLS) {
               const marks = context.grid.cells[cell].marks;
               if (marks[event.digit]) {
-                context.grid.highlighted.add(cell);
+                highlighted.add(cell);
               }
             }
-            return context.grid;
+            return {
+              ...context.grid,
+              highlighted,
+              highlightDigit: event.digit,
+            };
           },
         }),
         addToPast: assign((context) => ({

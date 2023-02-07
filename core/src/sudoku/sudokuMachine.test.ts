@@ -201,6 +201,8 @@ describe("highlighting", () => {
           expect(state.context.grid.highlighted).toHaveLength(0);
           break;
       }
+
+      expect(state.context.grid.highlightDigit).toBe(state.event.digit);
     });
 
     mock.start();
