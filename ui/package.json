@@ -22,6 +22,7 @@
   "dependencies": {
     "@solid-primitives/keyboard": "^1.0.7",
     "@xstate/solid": "^0.1.1",
+    "clsx": "^1.2.1",
     "solid-js": "^1.6.10",
     "xstate": "^4.35.4"
   }
