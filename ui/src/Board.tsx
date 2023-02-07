@@ -1,5 +1,6 @@
 import { For } from "solid-js";
 import { sudoku } from "./sudoku";
+import clsx from "clsx";
 
 function Mark({ cell, number }: { cell: string; number: number }) {
   const { context } = sudoku.state;
@@ -15,31 +16,33 @@ function Mark({ cell, number }: { cell: string; number: number }) {
   const highlighted = () =>
     context.grid.cells[cell].marks[context.highlight] ?? false;
 
-  const textColor = !highlighted() ? "text-zinc-700" : "text-blue-800";
-  const darkTextColor = !highlighted()
-    ? "dark:text-zinc-300"
-    : "dark:text-blue-200";
-  const hoverTextColor = !highlighted()
-    ? "hover:text-zinc-700/60"
-    : "hover:text-blue-800/60";
-  const darkHoverTextColor = !highlighted()
-    ? "dark:hover:text-zinc-300/60"
-    : "dark:hover:text-blue-200/60";
-  const hoverShadow = !highlighted()
-    ? "hover:shadow-[inset_0em_0em_0em_5em_rgba(0,0,0,0.12)]"
-    : "hover:shadow-[inset_0em_0em_0em_5em_rgba(29,78,216,0.15)]";
-
   return (
     <div
-      class={`${
+      class={clsx(
+        "h-full w-full transition-all ease-in-out motion-reduce:transition-none dark:hover:shadow-[inset_0em_0em_0em_10em_rgba(1,1,1,0.12)]",
+        {
+          "hover:shadow-[inset_0em_0em_0em_5em_rgba(29,78,216,0.15)]":
+            highlighted(),
+          "hover:shadow-[inset_0em_0em_0em_5em_rgba(0,0,0,0.12)]":
+            !highlighted(),
+          "text-transparent": !showMark(),
+        },
         showMark()
-          ? `${textColor} ${darkTextColor}`
-          : `text-transparent ${hoverTextColor} ${darkHoverTextColor}`
-      } h-full w-full transition-all ease-in-out motion-reduce:transition-none ${hoverShadow} dark:hover:shadow-[inset_0em_0em_0em_10em_rgba(1,1,1,0.12)]`}
+          ? {
+              "text-blue-800 dark:text-blue-200": highlighted(),
+              "text-zinc-700 dark:text-zinc-300": !highlighted(),
+            }
+          : {
+              "hover:text-blue-800/60 dark:hover:text-blue-200/60":
+                highlighted(),
+              "hover:text-zinc-700/60 dark:hover:text-zinc-300/60":
+                !highlighted(),
+            },
+      )}
       onClick={handleClick}
       onDblClick={handleDoubleClick}
     >
-      <span class="pointer-events-none select-none align-top text-[1.8vmin]">
+      <span class={"pointer-events-none select-none align-top text-[1.8vmin]"}>
         {number}
       </span>
     </div>
@@ -60,23 +63,33 @@ function Cell({ cell }: { cell: string }) {
   return (
     <div
       onClick={handleSetCursor}
-      class={`${
-        isCurrent() && "z-10 ring-2 ring-inset ring-blue-500"
-      }  flex items-center justify-center outline outline-1 outline-zinc-900 dark:outline-zinc-600`}
+      class={clsx(
+        "flex items-center justify-center outline outline-1 outline-zinc-900 dark:outline-zinc-600",
+        {
+          "z-10 ring-2 ring-inset ring-blue-500": isCurrent(),
+        },
+      )}
     >
       {digit() !== 0 ? (
         <span
-          class={`pointer-events-none animate-appear select-none text-[5.5vmin] motion-reduce:animate-none ${
-            prefilled() ? "text-zinc-900 dark:text-zinc-300" : "text-blue-500"
-          }`}
+          class={clsx(
+            "animate-appear pointer-events-none select-none text-[5.5vmin] motion-reduce:animate-none",
+            {
+              "text-zinc-900 dark:text-zinc-300": prefilled(),
+              "text-blue-500": !prefilled(),
+            },
+          )}
         >
           {digit}
         </span>
       ) : (
         <div
-          class={`grid h-full w-full grid-cols-3 grid-rows-3 p-1 transition-colors ease-in-out motion-reduce:transition-none ${
-            highlighted() && "bg-blue-300/50 dark:bg-blue-900/30"
-          }`}
+          class={clsx(
+            "grid h-full w-full grid-cols-3 grid-rows-3 p-1 transition-colors ease-in-out motion-reduce:transition-none",
+            {
+              "bg-blue-300/50 dark:bg-blue-900/30": highlighted(),
+            },
+          )}
         >
           <For each={[1, 2, 3, 4, 5, 6, 7, 8, 9]}>
             {(n) => <Mark cell={cell} number={n} />}
@@ -109,7 +122,7 @@ const blocks = [
     ["1", "2", "3"],
     ["4", "5", "6"],
     ["7", "8", "9"],
-  ].map((i) => cross(g, i))
+  ].map((i) => cross(g, i)),
 );
 
 function Board() {
