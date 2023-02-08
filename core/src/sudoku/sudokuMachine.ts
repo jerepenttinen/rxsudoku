@@ -18,7 +18,6 @@ type DirectionValues = ["up", "down", "left", "right"];
 export type Direction = DirectionValues[number];
 
 type SudokuEvent =
-  | { type: "STARTGAME" }
   | { type: "NEWGAME" }
   | { type: "RESETGAME" }
   | { type: "UNDO" }
@@ -30,18 +29,12 @@ type SudokuEvent =
   | { type: "SETCELL"; cell: string; digit: number };
 
 export const sudokuMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0FpALqfgDYDEyAKgIIBK7A4p1wBRANoAGALqJQABwyx6pDOWkgAHogAcmqgE5dAJgCMmgOxjNYgCwA2c7oA0IAJ6IAzDbFUDAVjFiDGwNTXStA4IBfCKc0TBwCEgpqGSZ8ZwooKgB3fEVyOjAAJyIGZRZcAHkANSEAYQBVbmQK7nEpJBA5BVKVDo0EMx89Kx8DDzsfTUnNJ1cENzEbKit9fU9AnytFmyiY9Gw8IjJKKhS0jOzchnyikqVyFnYKvj4AGSFcHgBpNtUuxWUqn6mhsVj0blMIwhPlMml0Rjcs0QYTc3j8-l0cNMPh8NhsPl2IFiBwSx2SqXS5EyOTyBWKhB6LG4QmQQn4glEkj+8gBvVA-XxS0MJiMVkhPiM-kRLkQgV0VE0biVmylllMpkJxPiRySpwpFxp1zpdzKrPYtSEr1evw6-x6QPculRnjcBgC+nMCwMSIQgR0VgRHgCBl06rERgJ0SJ+21iROZ0p1KuFGNDPubDZDSaLRtsh59r6iHVSyMRlMpYhBl8HhmMoQfgMaP8WysmlLdl0OyjWsOcfJ5ypl1ptzTZXqADkACIVXOdfP3B310LLTRugxTTsh4w+-GmKg4oxO11WEY2IwGTUx3tkvUDpPD+mM5nT2d2heFhAhPcGWy6XG+DFIR3EYFQDOwLFBSZfEvOJr11BMLhIMBCCwLIKBYV950BD83E7KgbDbLdjEVfQfVGJYxXxEFMSMAj8RgkkdXjfVByQlC0IeEQjHaPNunfflHSWAjz0MYjcMcOszy8SicVDRUzydBjYxvLIynHIQAHUBGETC+OwgSED-KgQgI8VLFsewfTlBUlTcFUxDcNUNW7K9SXglj7yNEdGQACQAST4HzXgCnz2F03lF1bMEbFw2KHLEUYop9FYdDhOz1WCV0Iz-KIo3IDAIDgVQezcyhuT0vl1EQABaSxkoowMoL8LKVisJS4JOWgGGYcqIo-aqQx9IMmwCIIQjCMb2tK-tE16gsDIWIw9EWYxrCmSx-B8H1Az0QMzwWNwTA8SM9lg6bb0TIcvMffi5wqxd8S8UtywRUwqx8GtkslKh-GbNb2xMqamJmxDiGQ1CKDm27+jcFZlqCSVW0mX6trrXCwTA8tw0c7EYralyzuB7J9LuvqDOq10rPDGzlS2BynNyiIgA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0ADgDb4CeFUVA7vqQC4VdgBORHhnIBiXAHkAagFEAwgFUASsglKA2gAYAuolA0MsbqRF6QAD0QAOAOwBWKgE4ALHYBMAZgBsX+1btWVgA0IIyIHppeVM6OsY5emm5eds6RXgC+6SFomDgEJBTU9Ews7Jw85HyChMJiACoSAOKNADIyuACCSgDSWrpIIAZGtWaWCFZezk4eNq4zdjZWjgCMHiFhCM6eVG52mvuOS-Z2PnaZ2ejYeERklLQMzOSsHMaVAkImYkoyyDJ1jR1cDI+mYhsZTAMxskoo43MsrMtnLM7Mt9mtQogko4qFYPHiUmirJobDZziAcld8rcig9Si8KlUPiJRL86nIZC0WiCBmCRpDwo4PFQEh43IlYjZNBE3OtMV4rNFVt5Em5HCTNMszllyZc8jdCvcSk8yq9GTVPiy-ooVGpufpDODyKNECSostljZ3TM3LtvMEMQg9m4dntNKlnAjlr54mSKXqCndio9nuVeO9zcyFAA5AAiEjtgwdfNAYzsLmiVjFbn88VVcNlCGSNiodhRgtFzlcXmWbljuuuCZpRpTpvTtVE3zzBd5n2dCBsap2zi8jhOuwOswbkwcVmcUclE1cla1F1yA+phuTJoZY4tAAkAJKNO8tJ93urTouz-mbXfCjyCoKUqaO4EbOA2MQKksHgLDYbg2KKmqrn2Z5UgaSalCQYCEFgbAUKIn7DN+JYClE8o9rCcK4rEDbuFESLJBMhxRhMJ46qh+qJrSxpYTheFiOoyz9PaREQiRCAAWRCJ1lRAGOFuqLRDYyRlos3jLIKKGUpx1BsMyWYyAA6gCQKEY6c6rlQC7ysiRLLpK8kBliOJ4jBqRSkSJKZNq5AYBAcBmHG56FKCX5iRYiAALREhB9FKgkPpqpKmpafGF4YU8oWiU6P4RMsTiRHCYb+ES+x2A2SpOPFKpJRqbFBWhXHDteabVMWhbZXOySaFQ7qeqscG+vKEGKfs+zhpG0YZNqDU6ZemHENhuEUFl5m5TEBVeEVEYBGN5UBgBUx7r4qKrLYJweM4qXBXcek5SJa3iZFooNmK+W4vi7keJ5pLeUAA */
   createMachine<SudokuContext, SudokuEvent>(
     {
       predictableActionArguments: true,
       preserveActionOrder: true,
       states: {
-        initial: {
-          on: {
-            STARTGAME: "playing",
-          },
-        },
-
         playing: {
           entry: ["generateGrid"],
 
@@ -127,7 +120,7 @@ export const sudokuMachine =
         past: [],
         future: [],
       },
-      initial: "initial",
+      initial: "playing",
       id: "SudokuMachine",
     },
     {

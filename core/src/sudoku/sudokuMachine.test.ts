@@ -43,8 +43,6 @@ describe("grid generation", () => {
     });
 
     mock.start();
-
-    mock.send({ type: "STARTGAME" });
   });
 });
 
@@ -79,8 +77,6 @@ describe("cursor movement", () => {
 
     mock.start();
 
-    mock.send({ type: "STARTGAME" });
-
     for (const input of inputs) {
       mock.send({ type: "SETCURSOR", cell: input.input });
     }
@@ -112,7 +108,6 @@ describe("setting cells", () => {
     });
 
     mock.start();
-    mock.send({ type: "STARTGAME" });
     mock.send({ type: "SETCELL", cell: "B1", digit: 1 });
   });
 
@@ -132,7 +127,6 @@ describe("setting cells", () => {
     });
 
     mock.start();
-    mock.send({ type: "STARTGAME" });
 
     for (const _ of expected) {
       mock.send({ type: "TOGGLEMARK", cell: cellPos, mark: mark });
@@ -152,7 +146,6 @@ describe("setting cells", () => {
     });
 
     mock.start();
-    mock.send({ type: "STARTGAME" });
 
     mock.send({ type: "SETCELL", cell: peerPos, digit: mark });
     mock.send({ type: "TOGGLEMARK", cell: cellPos, mark: mark });
@@ -172,7 +165,6 @@ describe("unde redo", () => {
     });
 
     mock.start();
-    mock.send({ type: "STARTGAME" });
     mock.send({ type: "SETCELL", cell: "A1", digit: 1 });
     mock.send({ type: "UNDO" });
     mock.send({ type: "REDO" });
@@ -190,7 +182,6 @@ describe("highlighting", () => {
     });
 
     mock.start();
-    mock.send({ type: "STARTGAME" });
 
     mock.send({ type: "HIGHLIGHT", digit: 1 });
     mock.send({ type: "HIGHLIGHT", digit: 2 });
