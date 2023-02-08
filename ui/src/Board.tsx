@@ -30,12 +30,12 @@ function Mark({ cell, number }: { cell: string; number: number }) {
         showMark()
           ? {
               "text-blue-800 dark:text-blue-200": highlighted(),
-              "text-zinc-700 dark:text-zinc-300": !highlighted(),
+              "text-gray-700 dark:text-gray-300": !highlighted(),
             }
           : {
               "hover:text-blue-800/60 dark:hover:text-blue-200/60":
                 highlighted(),
-              "hover:text-zinc-700/60 dark:hover:text-zinc-300/60":
+              "hover:text-gray-700/60 dark:hover:text-gray-300/60":
                 !highlighted(),
             },
       )}
@@ -64,7 +64,7 @@ function Cell({ cell }: { cell: string }) {
     <div
       onClick={handleSetCursor}
       class={clsx(
-        "flex items-center justify-center outline outline-1 outline-zinc-900 dark:outline-zinc-600",
+        "flex items-center justify-center outline outline-1 outline-zinc-900 dark:outline-gray-500",
         {
           "z-10 ring-2 ring-inset ring-blue-500": isCurrent(),
         },
@@ -75,8 +75,8 @@ function Cell({ cell }: { cell: string }) {
           class={clsx(
             "animate-appear pointer-events-none select-none text-[5.5vmin] motion-reduce:animate-none",
             {
-              "text-zinc-900 dark:text-zinc-300": prefilled(),
-              "text-blue-500": !prefilled(),
+              "text-zinc-900 dark:text-white": prefilled(),
+              "text-blue-500 dark:text-blue-400": !prefilled(),
             },
           )}
         >
@@ -87,7 +87,7 @@ function Cell({ cell }: { cell: string }) {
           class={clsx(
             "grid h-full w-full grid-cols-3 grid-rows-3 p-1 transition-colors ease-in-out motion-reduce:transition-none",
             {
-              "bg-blue-300/50 dark:bg-blue-900/30": highlighted(),
+              "bg-blue-300/50 dark:bg-gray-900/40": highlighted(),
             },
           )}
         >
@@ -102,7 +102,7 @@ function Cell({ cell }: { cell: string }) {
 
 function Block({ list }: { list: string[] }) {
   return (
-    <div class="grid grid-cols-3 grid-rows-3 gap-[1px] border-2 border-zinc-900 dark:border-zinc-600">
+    <div class="grid grid-cols-3 grid-rows-3 gap-[1px] border-2 border-zinc-900 dark:border-gray-500">
       <For each={list}>{(cell) => <Cell cell={cell} />}</For>
     </div>
   );
@@ -127,7 +127,7 @@ const blocks = [
 
 function Board() {
   return (
-    <div class="grid h-[80vmin] w-[80vmin] grid-cols-3 grid-rows-3 bg-zinc-50 text-center drop-shadow-2xl dark:bg-zinc-800">
+    <div class="grid h-[80vmin] w-[80vmin] grid-cols-3 grid-rows-3 bg-zinc-50 text-center drop-shadow-2xl dark:bg-gray-700">
       <For each={blocks}>{(block, i) => <Block list={block} />}</For>
     </div>
   );
