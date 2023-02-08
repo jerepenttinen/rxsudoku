@@ -10,6 +10,7 @@ beforeEach(() => {
     {
       actions: {
         generateGrid: () => {},
+        startSlamming: () => {},
       },
     },
     {
