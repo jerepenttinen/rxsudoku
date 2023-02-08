@@ -20,6 +20,7 @@ beforeEach(() => {
       highlight: 0,
       past: [],
       future: [],
+      slamRef: undefined,
     }
   );
 });

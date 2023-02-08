@@ -1,8 +1,9 @@
-import { assign, createMachine, actions } from "xstate";
+import { assign, createMachine, actions, spawn } from "xstate";
 import { Grid } from "../generator/types";
 import { generate, getPeerDigits, initializeGrid } from "../generator/sudoku";
 import constants from "../generator/constants";
 import { nextCell, nextCellBySubgrid } from "./movements";
+import { randInt } from "../generator/utils";
 
 type SudokuContext = {
   grid: Grid;
@@ -12,6 +13,7 @@ type SudokuContext = {
   highlight: number;
   past: Grid[];
   future: Grid[];
+  slamRef: any;
 };
 
 type DirectionValues = ["up", "down", "left", "right"];
@@ -29,7 +31,7 @@ type SudokuEvent =
   | { type: "TOGGLEMARK"; cell: string; mark: number }
   | { type: "SETCELL"; cell: string; digit: number };
 
-const { send, cancel } = actions;
+const { send, cancel, sendUpdate } = actions;
 
 const startSlamming = send(
   { type: "SLAM" },
@@ -146,13 +148,56 @@ export const sudokuMachine =
         highlight: 0,
         past: [],
         future: [],
+        slamRef: undefined,
       },
       initial: "playing",
       id: "SudokuMachine",
     },
     {
       actions: {
-        doSlamming: () => console.log("slamming"),
+        doSlamming: assign({
+          slamRef: (context) => {
+            spawn((callback) => {
+              const potential: string[] = [];
+              for (const cellPos of constants.CELLS) {
+                const cell = context.grid.cells[cellPos];
+                if (context.grid.prefilled.has(cellPos)) {
+                  continue;
+                }
+
+                if (cell.digit !== 0) {
+                  continue;
+                }
+
+                let count = 0;
+                for (let i = 1; i <= 9; i++) {
+                  if (cell.marks[i]) {
+                    count++;
+                  }
+                }
+
+                if (count === 1) {
+                  potential.push(cellPos);
+                }
+              }
+
+              if (potential.length === 0) {
+                return;
+              }
+
+              const chosenCellPos = potential[randInt(potential.length - 1)];
+              const chosenCell = context.grid.cells[chosenCellPos];
+
+              let mark = 0;
+              for (let i = 1; i <= 9; i++) {
+                if (chosenCell.marks[i]) {
+                  mark = i;
+                }
+              }
+              callback({ type: "SETCELL", cell: chosenCellPos, digit: mark });
+            });
+          },
+        }),
         generateGrid: assign({
           grid: () => generate(30),
         }),
