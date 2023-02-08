@@ -4,7 +4,7 @@ import HighlightButtons from "./HighlightButtons";
 
 function App() {
   return (
-    <div class="h-full min-h-screen dark:bg-gray-900">
+    <div class="flex h-full min-h-screen flex-col items-center py-12 dark:bg-gray-900">
       <Board />
       <HighlightButtons />
     </div>
