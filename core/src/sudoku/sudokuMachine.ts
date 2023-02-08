@@ -1,4 +1,4 @@
-import { assign, createMachine } from "xstate";
+import { assign, createMachine, actions } from "xstate";
 import { Grid } from "../generator/types";
 import { generate, getPeerDigits, initializeGrid } from "../generator/sudoku";
 import constants from "../generator/constants";
@@ -22,14 +22,27 @@ type SudokuEvent =
   | { type: "RESETGAME" }
   | { type: "UNDO" }
   | { type: "REDO" }
+  | { type: "SLAM" }
   | { type: "HIGHLIGHT"; digit: number }
   | { type: "SETCURSOR"; cell: string }
   | { type: "MOVECURSOR"; direction: Direction; subgrid?: boolean }
   | { type: "TOGGLEMARK"; cell: string; mark: number }
   | { type: "SETCELL"; cell: string; digit: number };
 
+const { send, cancel } = actions;
+
+const startSlamming = send(
+  { type: "SLAM" },
+  {
+    delay: 2000,
+    id: "slam",
+  }
+);
+
+const cancelSlamming = cancel("slam");
+
 export const sudokuMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0ADgDb4CeFUVA7vqQC4VdgBORHhnIBiXAHkAagFEAwgFUASsglKA2gAYAuolA0MsbqRF6QAD0QAOAOwBWKgE4ALHYBMAZgBsX+1btWVgA0IIyIHppeVM6OsY5emm5eds6RXgC+6SFomDgEJBTU9Ews7Jw85HyChMJiACoSAOKNADIyuACCSgDSWrpIIAZGtWaWCFZezk4eNq4zdjZWjgCMHiFhCM6eVG52mvuOS-Z2PnaZ2ejYeERklLQMzOSsHMaVAkImYkoyyDJ1jR1cDI+mYhsZTAMxskoo43MsrMtnLM7Mt9mtQogko4qFYPHiUmirJobDZziAcld8rcig9Si8KlUPiJRL86nIZC0WiCBmCRpDwo4PFQEh43IlYjZNBE3OtMV4rNFVt5Em5HCTNMszllyZc8jdCvcSk8yq9GTVPiy-ooVGpufpDODyKNECSostljZ3TM3LtvMEMQg9m4dntNKlnAjlr54mSKXqCndio9nuVeO9zcyFAA5AAiEjtgwdfNAYzsLmiVjFbn88VVcNlCGSNiodhRgtFzlcXmWbljuuuCZpRpTpvTtVE3zzBd5n2dCBsap2zi8jhOuwOswbkwcVmcUclE1cla1F1yA+phuTJoZY4tAAkAJKNO8tJ93urTouz-mbXfCjyCoKUqaO4EbOA2MQKksHgLDYbg2KKmqrn2Z5UgaSalCQYCEFgbAUKIn7DN+JYClE8o9rCcK4rEDbuFESLJBMhxRhMJ46qh+qJrSxpYTheFiOoyz9PaREQiRCAAWRCJ1lRAGOFuqLRDYyRlos3jLIKKGUpx1BsMyWYyAA6gCQKEY6c6rlQC7ysiRLLpK8kBliOJ4jBqRSkSJKZNq5AYBAcBmHG56FKCX5iRYiAALREhB9FKgkPpqpKmpafGF4YU8oWiU6P4RMsTiRHCYb+ES+x2A2SpOPFKpJRqbFBWhXHDteabVMWhbZXOySaFQ7qeqscG+vKEGKfs+zhpG0YZNqDU6ZemHENhuEUFl5m5TEBVeEVEYBGN5UBgBUx7r4qKrLYJweM4qXBXcek5SJa3iZFooNmK+W4vi7keJ5pLeUAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0ADgDb4CeFUVA7vqQC4VdgBORHhnIBiXAHkAagFEAwgFUASsglKA2gAYAuolA0MsbqRF6QAD0QBGGwE4qtgCwBWAEwBmAGyeA7M4AcAT4ANCCMiK7+nlSOtnG2npquns6Omt4AvhmhaJg4BCQU1PRMLOycPOR8goTCYgAqEgDiTQAyMrgAgkoA0lq6SCAGRnVmlgi2Pv4O7j4us85TtlbuoeEIju7uVK7Omvu2-pPOzt7OWTno2HhEZJS0DMzkrBzGVQJCJmJKMsgy9U1OrgZP0zMNjKZBuMUtFbK4rP4rI45s4rPtVmEIp57P4tu5Uuj-JofD4LiBctcCndio8yq9KtVPiJRH96nIZK1WqDBuDRlDEO5EVREu5XEk4j5NO4kmsIvsYisvElXJNJVZztlyVd8rcig9Ss9ym9GbUviz-ooVGpufpDBDyGNEJNNFQbD4bLNXLsvP5ZQgTtNdvs0o5EVZPP4yRSdYV7iUni8KrwPqbmQoAHIAEQkNqGdr5oHGzicMX8Ysixc8KvhfpSPioJysti2rkcLk8VlcUe1N1jNINieNKbqoh+2dzvK+joQPkmO0c2NOQc0k0ctZcVH8jnDkqiLjLGsueV71P1CaNDOHZoAEgBJJrX1r36-1Cf5qf8jZb4XuZvNqWaG4oZrpiGyHJuzaLD4rg+KK6q2IeWrHlSerxmUJBgIQWBsBQohviMH6FgKCTCoi1bwricR+m40TIikUSHOGUSIdGJ6obShoYVhOFiOoVgDLaBGQkRCC-tEEadnCFG-rYtZojEPgpMWUxeE27jdshur3GwzLpjIADqgLAvh9rTghVCzhGKJEgukqyaByQ4niBJSkSJIaZSWn9ue9LJjUI7IK0QImQWFiIEsDgJAhVZ7Cucx+mKgaxSGYa+AkWSauQGAQHAZisShlBgu+wlhQgAC0RJ+mV8INlEnj4ghJyigEngeTGp5oc8RVCQ6n7SlYDjpPCmihgE+yAbWzgOIqiReqqmjqm1bFxhxg6Xv5hF5j104pC6boetB3oRn624uuNI0jalllLQV3nocQmHYRQ3WmX1sSDVWaKjUS+zOH6v6OAqvhois-h+PVjg3V57AlZOJXjGVooJQtm7OWkrnEqSGVAA */
   createMachine<SudokuContext, SudokuEvent>(
     {
       predictableActionArguments: true,
@@ -40,6 +53,7 @@ export const sudokuMachine =
 
           states: {
             waitinteraction: {
+              entry: [startSlamming],
               on: {
                 MOVECURSOR: {
                   target: "waitinteraction",
@@ -50,8 +64,8 @@ export const sudokuMachine =
                 TOGGLEMARK: {
                   cond: "isValidToggleMark",
                   target: "waitinteraction",
-                  internal: true,
-                  actions: ["addToPast", "toggleMark"],
+                  internal: false,
+                  actions: [cancelSlamming, "addToPast", "toggleMark"],
                 },
 
                 RESETGAME: "#SudokuMachine.playing",
@@ -59,34 +73,47 @@ export const sudokuMachine =
                 SETCELL: {
                   target: "checkwin",
                   cond: "isValidSetCell",
-                  actions: ["addToPast", "setCell", "eliminateMarks"],
+                  actions: [
+                    cancelSlamming,
+                    "addToPast",
+                    "setCell",
+                    "eliminateMarks",
+                  ],
+                  internal: false,
                 },
 
                 SETCURSOR: {
                   target: "waitinteraction",
                   cond: "isValidSetCursor",
-                  actions: ["setCursor"],
-                  internal: true,
+                  actions: [cancelSlamming, "setCursor"],
+                  internal: false,
                 },
 
                 UNDO: {
                   cond: "canUndo",
-                  actions: ["undo"],
+                  actions: [cancelSlamming, "undo"],
                   target: "waitinteraction",
-                  internal: true,
+                  internal: false,
                 },
 
                 REDO: {
                   cond: "canRedo",
-                  actions: ["redo"],
+                  actions: [cancelSlamming, "redo"],
                   target: "waitinteraction",
-                  internal: true,
+                  internal: false,
                 },
 
                 HIGHLIGHT: {
                   actions: ["highlight"],
                   target: "waitinteraction",
                   internal: true,
+                },
+
+                SLAM: {
+                  target: "waitinteraction",
+                  internal: false,
+                  cond: "slamming",
+                  actions: ["doSlamming"],
                 },
               },
             },
@@ -125,6 +152,7 @@ export const sudokuMachine =
     },
     {
       actions: {
+        doSlamming: () => console.log("slamming"),
         generateGrid: assign({
           grid: () => generate(30),
         }),
@@ -274,6 +302,7 @@ export const sudokuMachine =
         },
         canUndo: (context) => context.past.length > 0,
         canRedo: (context) => context.future.length > 0,
+        slamming: () => true,
       },
     }
   );
