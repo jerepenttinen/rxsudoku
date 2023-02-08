@@ -87,7 +87,7 @@ function Cell({ cell }: { cell: string }) {
           class={clsx(
             "grid h-full w-full grid-cols-3 grid-rows-3 p-1 transition-colors ease-in-out motion-reduce:transition-none",
             {
-              "bg-blue-300/50 dark:bg-gray-900/40": highlighted(),
+              "bg-blue-300/50 dark:bg-blue-900/40": highlighted(),
             },
           )}
         >
