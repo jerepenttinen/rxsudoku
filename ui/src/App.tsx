@@ -1,4 +1,4 @@
-import "./Hotkeys";
+import withHotkeys from "./withHotkeys";
 import Board from "./Board";
 import HighlightButtons from "./HighlightButtons";
 
@@ -11,4 +11,4 @@ function App() {
   );
 }
 
-export default App;
+export default withHotkeys(App);
