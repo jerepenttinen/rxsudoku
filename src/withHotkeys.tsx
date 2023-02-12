@@ -1,6 +1,6 @@
 import { createShortcut } from "@solid-primitives/keyboard";
 import { sudoku } from "./sudoku";
-import { Component, ComponentProps, ParentProps } from "solid-js";
+import { Component } from "solid-js";
 
 export default function withHotkeys(wrapped: Component) {
   for (let i = 0; i <= 9; i++) {
