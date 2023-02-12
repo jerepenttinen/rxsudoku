@@ -56,9 +56,17 @@ export const useKeyDownList = /*#__PURE__*/ createSharedRoot<
   makeEventListener(window, "keydown", (e) => {
     // e.key may be undefined when used with <datalist> el
     // gh issue: https://github.com/solidjs-community/solid-primitives/issues/246
-    if (e.repeat || typeof e.code !== "string") return;
+    // if (e.repeat || typeof e.code !== "string") return;
     const key = e.code.toUpperCase();
-    if (pressedKeys().includes(key)) return;
+    if (pressedKeys().includes(key)) {
+      // if (e.repeat) {
+      batch(() => {
+        setEvent(e);
+        setPressedKeys((prev) => [...prev]);
+      });
+      // }
+      return;
+    }
     batch(() => {
       setEvent(e);
       setPressedKeys((prev) => [...prev, key]);
@@ -256,11 +264,11 @@ export function createShortcut(
       return;
     }
     if (arrayEquals(last, keys)) {
-      const prev = sequence.at(-2);
-      if (!prev || arrayEquals(prev, keys.slice(0, keys.length - 1))) {
-        preventDefault && event()!.preventDefault();
-        callback();
-      }
+      // const prev = sequence.at(-2);
+      // if (!prev || arrayEquals(prev, keys.slice(0, keys.length - 1))) {
+      preventDefault && event()!.preventDefault();
+      callback();
+      // }
     }
   };
 

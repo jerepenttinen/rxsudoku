@@ -1,37 +1,36 @@
-import { createShortcut, useKeyDownList } from "./keyboard";
+import { createKeyHold, createShortcut, useKeyDownList } from "./keyboard";
 import { sudoku } from "./sudoku";
 import { Component, createEffect } from "solid-js";
 
 export default function withHotkeys(wrapped: Component) {
   for (let i = 1; i <= 9; i++) {
     const key = "Digit" + i.toString();
-    createShortcut(["ControlLeft", key], () =>
+    const toggleMark = () =>
       sudoku.send({
         type: "TOGGLEMARK",
         cell: sudoku.state.context.cursor,
         mark: i,
-      }),
-    );
-    createShortcut(["ControlRight", key], () =>
-      sudoku.send({
-        type: "TOGGLEMARK",
-        cell: sudoku.state.context.cursor,
-        mark: i,
-      }),
-    );
+      });
 
-    createShortcut(["ShiftLeft", key], () => {
-      sudoku.send({
-        type: "HIGHLIGHT",
-        digit: i,
-      });
-    });
-    createShortcut(["ShiftRight", key], () => {
-      sudoku.send({
-        type: "HIGHLIGHT",
-        digit: i,
-      });
-    });
+    createShortcut(["ControlLeft", key], toggleMark);
+    createShortcut(["ControlRight", key], toggleMark);
+
+    const toggleHighlight = () => {
+      if (sudoku.state.context.highlight === i) {
+        sudoku.send({
+          type: "HIGHLIGHT",
+          digit: 0,
+        });
+      } else {
+        sudoku.send({
+          type: "HIGHLIGHT",
+          digit: i,
+        });
+      }
+    };
+
+    createShortcut(["ShiftLeft", key], toggleHighlight);
+    createShortcut(["ShiftRight", key], toggleHighlight);
 
     createShortcut([key], () =>
       sudoku.send({
@@ -100,11 +99,6 @@ export default function withHotkeys(wrapped: Component) {
       cell: sudoku.state.context.cursor,
       digit: sudoku.state.context.highlight,
     });
-  });
-
-  const keys = useKeyDownList();
-  createEffect(() => {
-    console.log(keys[0]());
   });
 
   return wrapped;
