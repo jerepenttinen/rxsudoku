@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 import { sudoku } from "./sudoku";
 import clsx from "clsx";
 
@@ -70,7 +70,23 @@ function Cell({ cell }: { cell: string }) {
         },
       )}
     >
-      {digit() !== 0 ? (
+      <Show
+        when={digit() !== 0}
+        fallback={
+          <div
+            class={clsx(
+              "grid h-full w-full grid-cols-3 grid-rows-3 p-1 transition-colors ease-in-out motion-reduce:transition-none",
+              {
+                "bg-blue-300/50 dark:bg-blue-900/40": highlighted(),
+              },
+            )}
+          >
+            <For each={[1, 2, 3, 4, 5, 6, 7, 8, 9]}>
+              {(n) => <Mark cell={cell} number={n} />}
+            </For>
+          </div>
+        }
+      >
         <span
           class={clsx(
             "animate-appear pointer-events-none select-none text-[5.5vmin] motion-reduce:animate-none",
@@ -82,20 +98,7 @@ function Cell({ cell }: { cell: string }) {
         >
           {digit}
         </span>
-      ) : (
-        <div
-          class={clsx(
-            "grid h-full w-full grid-cols-3 grid-rows-3 p-1 transition-colors ease-in-out motion-reduce:transition-none",
-            {
-              "bg-blue-300/50 dark:bg-blue-900/40": highlighted(),
-            },
-          )}
-        >
-          <For each={[1, 2, 3, 4, 5, 6, 7, 8, 9]}>
-            {(n) => <Mark cell={cell} number={n} />}
-          </For>
-        </div>
-      )}
+      </Show>
     </div>
   );
 }
