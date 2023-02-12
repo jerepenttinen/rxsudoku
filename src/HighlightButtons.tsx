@@ -17,7 +17,13 @@ function HighlightButtons() {
                   context.highlight === num,
               },
             )}
-            onClick={() => sudoku.send({ type: "HIGHLIGHT", digit: num })}
+            onClick={() => {
+              if (context.highlight === num) {
+                sudoku.send({ type: "HIGHLIGHT", digit: 0 });
+              } else {
+                sudoku.send({ type: "HIGHLIGHT", digit: num });
+              }
+            }}
           >
             {num}
           </button>
