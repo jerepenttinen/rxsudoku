@@ -5,7 +5,9 @@ import init, { generate_grid } from "wasm";
 
 function App() {
   init().then(() => {
-    console.log(generate_grid());
+    const grid = generate_grid();
+    console.log(grid.difficulty, grid.grid);
+    grid.free();
   });
 
   return (

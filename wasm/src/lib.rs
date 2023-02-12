@@ -3,7 +3,6 @@ mod utils;
 use utils::set_panic_hook;
 use wasm_bindgen::prelude::*;
 
-use serde::{Deserialize, Serialize};
 use sudoku::strategy::Strategy;
 use sudoku::strategy::StrategySolver;
 use sudoku::Sudoku;
@@ -31,14 +30,14 @@ const STRATEGIES: &[Strategy] = &[
     Strategy::HiddenQuads,      // 54
 ];
 
-#[derive(Serialize, Deserialize)]
-struct Grid {
-    grid: String,
-    difficulty: i32,
+#[wasm_bindgen(getter_with_clone)]
+pub struct Grid {
+    pub grid: String,
+    pub difficulty: i32,
 }
 
 #[wasm_bindgen]
-pub fn generate_grid() -> String {
+pub fn generate_grid() -> Grid {
     set_panic_hook();
     loop {
         let sudoku = Sudoku::generate();
@@ -46,14 +45,16 @@ pub fn generate_grid() -> String {
         let solver = StrategySolver::from_sudoku(sudoku);
 
         if let Ok((_, deductions)) = solver.solve(&STRATEGIES) {
-            // let grid = Grid {
-            //     grid: ,
-            //     difficulty: deductions.iter().map(|d| score_strat(d.strategy())).sum(),
-            // };
+            let grid = Grid {
+                grid: sudoku.to_str_line().to_string(),
+                difficulty: deductions.iter().map(|d| score_strat(d.strategy())).sum(),
+            };
 
-            let line: &str = &sudoku.to_str_line();
+            // let line: &str = &sudoku.to_str_line();
 
-            return line.into();
+            // return line.into();
+            // return serde_wasm_bindgen::to_value(&grid).unwrap();
+            return grid;
         }
     }
 }
