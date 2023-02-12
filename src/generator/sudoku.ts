@@ -5,8 +5,6 @@ import { difference, range, shuffled } from "./utils";
 export function initializeGrid(): Grid {
   const result: Grid = {
     cells: {},
-    highlightDigit: 0,
-    highlighted: new Set(),
     prefilled: new Set(),
   };
 
@@ -16,6 +14,38 @@ export function initializeGrid(): Grid {
       marks: emptyMarks(),
     };
   }
+
+  return result;
+}
+
+export function load(from: string): Grid {
+  const result = initializeGrid();
+
+  const grid = from
+    .replaceAll(".", "0")
+    .replaceAll("-", "0")
+    .split("")
+    .filter((c: string) => Constants.ALLOWED_DIGITS.includes(c))
+    .map((n) => parseInt(n));
+
+  if (grid.length !== 81) {
+    throw Error("Grid has to be 81 characters long!");
+  }
+
+  for (const [i, v] of grid.entries()) {
+    result.cells[Constants.CELLS[i]] = {
+      digit: v,
+      marks: emptyMarks(),
+    };
+  }
+
+  for (const cellPos of Constants.CELLS) {
+    const cell = result.cells[cellPos];
+    if (cell.digit !== 0) {
+      result.prefilled.add(cellPos);
+    }
+  }
+  markUnfilledCells(result.cells);
 
   return result;
 }
@@ -48,18 +78,18 @@ export function generateGrid(grid: Cells): boolean {
       }
 
       const peerDigits = new Set(
-        Array.from(peer).map((pos) => grid[pos].digit)
+        Array.from(peer).map((pos) => grid[pos].digit),
       );
 
       const possibleDigits = shuffled(
-        Array.from(difference(digits, peerDigits))
+        Array.from(difference(digits, peerDigits)),
       );
 
       for (const digit of possibleDigits) {
         grid[cellPos].digit = digit;
         if (
           Constants.CELLS.map((pos) => grid[pos].digit).every(
-            (digit) => digit != 0
+            (digit) => digit != 0,
           ) ||
           generateGrid(grid)
         ) {
@@ -100,7 +130,7 @@ const digits = new Set(range(1, 10));
 
 export function hasSingleSolution(
   grid: Cells,
-  filledCellsCount: number
+  filledCellsCount: number,
 ): boolean {
   let solutionCount = 0;
   const emptyCells = Constants.CELLS.filter((pos) => grid[pos].digit === 0);
@@ -117,7 +147,7 @@ export function hasSingleSolution(
   }
 
   emptyCells.sort(
-    (a, b) => possibleDigits.get(a)!.size - possibleDigits.get(b)!.size
+    (a, b) => possibleDigits.get(a)!.size - possibleDigits.get(b)!.size,
   );
 
   const solver = (grid: Cells, depth: number): boolean => {
@@ -132,7 +162,7 @@ export function hasSingleSolution(
       }
 
       const peerDigits = new Set(
-        Array.from(peers).map((pos) => grid[pos].digit)
+        Array.from(peers).map((pos) => grid[pos].digit),
       );
 
       const possibleDigits = difference(digits, peerDigits);

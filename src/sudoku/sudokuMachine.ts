@@ -1,9 +1,15 @@
 import { assign, createMachine, actions, spawn } from "xstate";
 import { Grid } from "../generator/types";
-import { generate, getPeerDigits, initializeGrid } from "../generator/sudoku";
+import {
+  generate,
+  getPeerDigits,
+  initializeGrid,
+  load,
+} from "../generator/sudoku";
 import constants from "../generator/constants";
 import { nextCell, nextCellBySubgrid } from "./movements";
 import { randInt } from "../generator/utils";
+import { generate_grid, generate_grid_of_grade } from "../aivot";
 
 type SudokuContext = {
   grid: Grid;
@@ -189,7 +195,20 @@ export const sudokuMachine =
           },
         }),
         generateGrid: assign({
-          grid: () => generate(30),
+          grid: (_) => {
+            let hardest = { grid: "", difficulty: -1 };
+            for (let i = 0; i < 100; i++) {
+              const grid = generate_grid();
+              console.log(i, grid.difficulty);
+              if (grid.difficulty > hardest.difficulty) {
+                hardest = grid;
+              }
+            }
+            console.log(hardest.grid, hardest.difficulty);
+            // const hardest = generate_grid_of_grade(3);
+            // console.log(hardest.difficulty);
+            return load(hardest.grid);
+          },
         }),
         setCell: assign({
           grid: (context, event) => {
@@ -235,7 +254,7 @@ export const sudokuMachine =
               throw Error(`eliminateMarks called by ${event.type}`);
             }
 
-            const peers = constants.PEERS.get(event.cell);
+            const peers = constants.PEERS.get(event.cell)!;
 
             const newCells = structuredClone(context.grid.cells);
             for (const peer of peers) {
@@ -302,7 +321,7 @@ export const sudokuMachine =
           {
             delay: 2000,
             id: "slam",
-          }
+          },
         ),
         cancelSlamming: cancel("slam"),
       },
@@ -347,5 +366,5 @@ export const sudokuMachine =
         canRedo: (context) => context.future.length > 0,
         slamming: () => true,
       },
-    }
+    },
   );
