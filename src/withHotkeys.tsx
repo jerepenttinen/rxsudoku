@@ -3,7 +3,7 @@ import { sudoku } from "./sudoku";
 import { Component } from "solid-js";
 
 export default function withHotkeys(wrapped: Component) {
-  for (let i = 0; i <= 9; i++) {
+  for (let i = 1; i <= 9; i++) {
     createShortcut(["Control", i.toString()], () =>
       sudoku.send({
         type: "TOGGLEMARK",
