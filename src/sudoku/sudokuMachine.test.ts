@@ -17,12 +17,12 @@ beforeEach(() => {
       grid: initializeGrid(),
       cursor: "A1",
       timePassed: 0,
-      difficulty: 30,
+      difficulty: 0,
       highlight: 0,
       past: [],
       future: [],
       slamRef: undefined,
-    }
+    },
   );
 });
 

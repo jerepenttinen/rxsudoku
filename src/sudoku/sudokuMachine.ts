@@ -27,7 +27,7 @@ export type Direction = DirectionValues[number];
 
 type SudokuEvent =
   | { type: "NEWGAME" }
-  | { type: "RESETGAME" }
+  | { type: "RESETGAME"; difficulty: number }
   | { type: "UNDO" }
   | { type: "REDO" }
   | { type: "SLAM" }
@@ -66,7 +66,10 @@ export const sudokuMachine =
                   actions: ["cancelSlamming", "addToPast", "toggleMark"],
                 },
 
-                RESETGAME: "#SudokuMachine.playing",
+                RESETGAME: {
+                  target: "#SudokuMachine.playing",
+                  actions: ["cancelSlamming", "setDifficulty"],
+                },
 
                 SETCELL: {
                   target: "checkwin",
@@ -140,7 +143,7 @@ export const sudokuMachine =
         grid: initializeGrid(),
         cursor: "A1",
         timePassed: 0,
-        difficulty: 30,
+        difficulty: 0,
         highlight: 0,
         past: [],
         future: [],
@@ -195,18 +198,8 @@ export const sudokuMachine =
           },
         }),
         generateGrid: assign({
-          grid: (_) => {
-            let hardest = { grid: "", difficulty: -1 };
-            for (let i = 0; i < 100; i++) {
-              const grid = generate_grid();
-              console.log(i, grid.difficulty);
-              if (grid.difficulty > hardest.difficulty) {
-                hardest = grid;
-              }
-            }
-            console.log(hardest.grid, hardest.difficulty);
-            // const hardest = generate_grid_of_grade(3);
-            // console.log(hardest.difficulty);
+          grid: (context) => {
+            const hardest = generate_grid_of_grade(context.difficulty);
             return load(hardest.grid);
           },
         }),
@@ -262,6 +255,14 @@ export const sudokuMachine =
             }
 
             return { ...context.grid, cells: newCells };
+          },
+        }),
+        setDifficulty: assign({
+          difficulty: (_, event) => {
+            if (event.type !== "RESETGAME") {
+              throw Error(`setDifficulty called by ${event.type}`);
+            }
+            return event.difficulty;
           },
         }),
         setCursor: assign({
