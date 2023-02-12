@@ -24,7 +24,9 @@
     "vitest": "^0.28.4"
   },
   "dependencies": {
-    "@solid-primitives/keyboard": "^1.0.7",
+    "@solid-primitives/event-listener": "^2.2.6",
+    "@solid-primitives/rootless": "^1.2.3",
+    "@solid-primitives/utils": "^5.1.0",
     "@xstate/solid": "^0.1.1",
     "clsx": "^1.2.1",
     "solid-js": "^1.6.10",
