@@ -5,7 +5,7 @@ import clsx from "clsx";
 function HighlightButtons() {
   const context = sudoku.state.context;
   return (
-    <div class="my-4 inline-flex select-none" role="group">
+    <div class="inline-flex select-none" role="group">
       <For each={[1, 2, 3, 4, 5, 6, 7, 8, 9]}>
         {(num) => (
           <button

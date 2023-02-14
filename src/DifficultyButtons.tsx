@@ -29,7 +29,7 @@ export default function DifficultyButtons() {
   const context = sudoku.state.context;
 
   return (
-    <div class="my-4 inline-flex select-none" role="group">
+    <div class="inline-flex select-none" role="group">
       <For each={difficulties}>
         {(difficulty) => (
           <button
