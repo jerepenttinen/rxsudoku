@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { For, createSignal } from "solid-js";
-import { sudoku } from "./sudoku";
+import { sudoku } from "../sudoku";
 
 const difficulties = [
   {

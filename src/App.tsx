@@ -1,7 +1,7 @@
-import withHotkeys from "./withHotkeys";
-import Board from "./Board";
-import HighlightButtons from "./HighlightButtons";
-import DifficultyButtons from "./DifficultyButtons";
+import withHotkeys from "./keyboard/withHotkeys";
+import Board from "./components/Board";
+import HighlightButtons from "./components/HighlightButtons";
+import DifficultyButtons from "./components/DifficultyButtons";
 
 function App() {
   return (

@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { sudoku } from "./sudoku";
+import { sudoku } from "../sudoku";
 import clsx from "clsx";
 
 function Mark({ cell, number }: { cell: string; number: number }) {

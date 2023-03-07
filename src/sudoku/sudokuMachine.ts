@@ -9,7 +9,7 @@ import {
 import constants from "../generator/constants";
 import { nextCell, nextCellBySubgrid } from "./movements";
 import { randInt } from "../generator/utils";
-import { generate_grid, generate_grid_of_grade } from "../aivot";
+import { generate_grid, generate_grid_of_grade } from "./aivot";
 
 type SudokuContext = {
   grid: Grid;

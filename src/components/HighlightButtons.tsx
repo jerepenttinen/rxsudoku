@@ -1,5 +1,5 @@
 import { For } from "solid-js";
-import { sudoku } from "./sudoku";
+import { sudoku } from "../sudoku";
 import clsx from "clsx";
 
 function HighlightButtons() {

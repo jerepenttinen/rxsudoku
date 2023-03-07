@@ -1,6 +1,6 @@
-import { createKeyHold, createShortcut, useKeyDownList } from "./keyboard";
-import { sudoku } from "./sudoku";
-import { Component, createEffect } from "solid-js";
+import { createShortcut } from "./keyboard";
+import { sudoku } from "../sudoku";
+import { Component } from "solid-js";
 
 export default function withHotkeys(wrapped: Component) {
   for (let i = 1; i <= 9; i++) {
