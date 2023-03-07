@@ -1,15 +1,9 @@
 import { assign, createMachine, actions, spawn } from "xstate";
 import { Grid } from "../generator/types";
-import {
-  generate,
-  getPeerDigits,
-  initializeGrid,
-  load,
-} from "../generator/sudoku";
+import { getPeerDigits, initializeGrid, load } from "../generator/sudoku";
 import constants from "../generator/constants";
 import { nextCell, nextCellBySubgrid } from "./movements";
-import { randInt } from "../generator/utils";
-import { generate_grid, generate_grid_of_grade } from "./aivot";
+import { generate_grid_of_grade } from "./aivot";
 
 type SudokuContext = {
   grid: Grid;
@@ -157,7 +151,16 @@ export const sudokuMachine =
         doSlamming: assign({
           slamRef: (context) => {
             spawn((callback) => {
-              const potential: string[] = [];
+              const chosen = {
+                position: "",
+                distance: 0,
+              };
+              const ACharCode = "A".charCodeAt(0);
+
+              const [row, col] = context.cursor.split("");
+              const cursorRow = Number.parseInt(col);
+              const cursorCol = row.charCodeAt(0) - ACharCode + 1;
+
               for (const cellPos of constants.CELLS) {
                 const cell = context.grid.cells[cellPos];
                 if (context.grid.prefilled.has(cellPos)) {
@@ -176,24 +179,36 @@ export const sudokuMachine =
                 }
 
                 if (count === 1) {
-                  potential.push(cellPos);
+                  const [row, col] = cellPos.split("");
+                  const colNum = Number.parseInt(col);
+                  const rowNum = row.charCodeAt(0) - ACharCode + 1;
+
+                  const distance = Math.hypot(
+                    colNum - cursorCol,
+                    rowNum - cursorRow,
+                  );
+
+                  if (chosen.position === "" || distance < chosen.distance) {
+                    chosen.position = cellPos;
+                    chosen.distance = distance;
+                  }
                 }
               }
 
-              if (potential.length === 0) {
+              if (chosen.position === "") {
                 return;
               }
 
-              const chosenCellPos = potential[randInt(potential.length - 1)];
-              const chosenCell = context.grid.cells[chosenCellPos];
+              const chosenCell = context.grid.cells[chosen.position];
 
               let mark = 0;
               for (let i = 1; i <= 9; i++) {
                 if (chosenCell.marks[i]) {
                   mark = i;
+                  break;
                 }
               }
-              callback({ type: "SETCELL", cell: chosenCellPos, digit: mark });
+              callback({ type: "SETCELL", cell: chosen.position, digit: mark });
             });
           },
         }),
