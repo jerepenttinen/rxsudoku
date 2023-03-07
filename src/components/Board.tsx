@@ -71,7 +71,7 @@ function Cell({ cell }: { cell: string }) {
     <div
       onClick={handleSetCursor}
       class={clsx(
-        "flex items-center justify-center outline outline-1 outline-zinc-900 dark:outline-gray-500",
+        "flex items-center justify-center outline outline-1 outline-gray-900 dark:outline-gray-500",
         {
           "z-10 ring-2 ring-inset ring-blue-500": isCurrent(),
         },
@@ -98,7 +98,7 @@ function Cell({ cell }: { cell: string }) {
           class={clsx(
             "animate-appear pointer-events-none select-none text-[5.5vw] motion-reduce:animate-none md:text-4xl",
             {
-              "text-zinc-900 dark:text-white": prefilled(),
+              "text-gray-900 dark:text-white": prefilled(),
               "text-blue-500 dark:text-blue-400": !prefilled(),
             },
           )}
@@ -112,7 +112,7 @@ function Cell({ cell }: { cell: string }) {
 
 function Block({ list }: { list: string[] }) {
   return (
-    <div class="grid grid-cols-3 grid-rows-3 gap-[1px] border-2 border-zinc-900 dark:border-gray-500">
+    <div class="grid grid-cols-3 grid-rows-3 gap-[1px] border-2 border-gray-900 dark:border-gray-500">
       <For each={list}>{(cell) => <Cell cell={cell} />}</For>
     </div>
   );
@@ -137,7 +137,7 @@ const blocks = [
 
 function Board() {
   return (
-    <div class="grid aspect-square w-full grid-cols-3 grid-rows-3 bg-zinc-50 text-center drop-shadow-2xl dark:bg-gray-700">
+    <div class="grid aspect-square w-full grid-cols-3 grid-rows-3 bg-gray-50 text-center drop-shadow-2xl dark:bg-gray-700">
       <For each={blocks}>{(block, i) => <Block list={block} />}</For>
     </div>
   );
