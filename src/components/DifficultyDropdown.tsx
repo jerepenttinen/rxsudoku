@@ -25,7 +25,7 @@ const difficulties = [
   },
 ];
 
-export default function DifficultyButtons() {
+export default function DifficultyDropdown() {
   const context = sudoku.state.context;
   const [show, setShow] = createSignal(false);
 
