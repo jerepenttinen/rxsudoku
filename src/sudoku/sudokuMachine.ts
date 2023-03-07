@@ -41,7 +41,7 @@ export const sudokuMachine =
       preserveActionOrder: true,
       states: {
         playing: {
-          entry: ["generateGrid"],
+          entry: ["generateGrid", "resetTimer"],
 
           states: {
             waitinteraction: {
