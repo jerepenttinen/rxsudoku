@@ -73,7 +73,7 @@ export default function DifficultyDropdown() {
                         setState(false);
                       }}
                     >
-                      Reset
+                      New game
                     </button>
                   </div>
                 </MenuItem>
