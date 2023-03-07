@@ -14,6 +14,10 @@ type SudokuContext = {
   past: Grid[];
   future: Grid[];
   slamRef: any;
+  timer: {
+    started: number;
+    current: number;
+  };
 };
 
 type DirectionValues = ["up", "down", "left", "right"];
@@ -25,6 +29,7 @@ type SudokuEvent =
   | { type: "UNDO" }
   | { type: "REDO" }
   | { type: "SLAM" }
+  | { type: "TICKTIMER" }
   | { type: "HIGHLIGHT"; digit: number }
   | { type: "SETCURSOR"; cell: string }
   | { type: "MOVECURSOR"; direction: Direction; subgrid?: boolean }
@@ -34,7 +39,7 @@ type SudokuEvent =
 const { send, cancel } = actions;
 
 export const sudokuMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0ADgDb4CeFUVA7vqQC4VdgBORHhnIBiXAHkAagFEAwgFUASsglKA2gAYAuolA0MsbqRF6QAD0QBGGwE4qtgCwBWAEwBmAGyeA7M4AcAT4ANCCMiK7+nlSOtnG2npquns6Omt4AvhmhaJg4BCQU1PRMLOycPOR8goTCYgAqEgDiTQAyMrgAgkoA0lq6SCAGRnVmlgi2Pv4O7j4us85TtlbuoeEIju7uVK7Omvu2-pPOzt7OWTno2HhEZJS0DMzkrBzGVQJCJmJKMsgy9U1OrgZP0zMNjKZBuMUtFbK4rP4rI45s4rPtVmEIp57P4tu5Uuj-JofD4LiBctcCndio8yq9KtVPiJRH96nIZK1WqDBuDRlDEO5EVREu5XEk4j5NO4kmsIvsYisvElXJNJVZztlyVd8rcig9Ss9ym9GbUviz-ooVGpufpDBDyGNEJNNFQbD4bLNXLsvP5ZQgTtNdvs0o5EVZPP4yRSdYV7iUni8KrwPqbmQoAHIAEQkNqGdr5oHGzicMX8Ysixc8KvhfpSPioJysti2rkcLk8VlcUe1N1jNINieNKbqoh+2dzvK+joQPkmO0c2NOQc0k0ctZcVH8jnDkqiLjLGsueV71P1CaNDOHZoAEgBJJrX1r36-1Cf5qf8jZb4XuZvNqWaG4oZrpiGyHJuzaLD4rg+KK6q2IeWrHlSerxmUJBgIQWBsBQohviMH6FgKCTCoi1bwricR+m40TIikUSHOGUSIdGJ6obShoYVhOFiOoVgDLaBGQkRCC-tEEadnCFG-rYtZojEPgpMWUxeE27jdshur3GwzLpjIADqgLAvh9rTghVCzhGKJEgukqyaByQ4niBJSkSJIaZSWn9ue9LJjUI7IK0QImQWFiIEsDgJAhVZ7Cucx+mKgaxSGYa+AkWSauQGAQHAZisShlBgu+wlhQgAC0RJ+mV8INlEnj4ghJyigEngeTGp5oc8RVCQ6n7SlYDjpPCmihgE+yAbWzgOIqiReqqmjqm1bFxhxg6Xv5hF5j104pC6boetB3oRn624uuNI0jalllLQV3nocQmHYRQ3WmX1sSDVWaKjUS+zOH6v6OAqvhois-h+PVjg3V57AlZOJXjGVooJQtm7OWkrnEqSGVAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0ADgDb4CeFUVA7vqQC4VdgBORHhnIBiXAHkAagFEAwgFUASsglKA2gAYAuolA0MsbqRF6QAD0QBGGwE4qtgCwBWAEwBmAGyeA7M4AcAT4ANCCMiK7+nlSOtnG2npquns6Omt4AvhmhaJg4BCQU1PRMLOycPOR8goTCYgAqEgDiTQAyMrgAgkoA0lq6SCAGRnVmlgi2Pv4O7j4us85TtlbuoeEIju7uVK7Omvu2-pPOzt7OWTno2HhEZJS0DMzkrBzGVQJCJmJKMsgy9U1OrgZP0zMNjKZBuMUtFbK4rP4rI45s4rPtVmEIp57P4tu5Uuj-JofD4LiBctcCndio8yq9KtVPiJRH96nIZK1WqDBuDRlDEO5EVREu5XEk4j5NO4kmsIvsYisvElXJNJVZztlyVd8rcig9Ss9ym9GbUviz-ooVGpufpDBDyGNEJNNFQbD4bLNXLsvP5ZQgTtNdvs0o5EVZPP4yRSdYV7iUni8KrwPqbmQoAHIAEQkNqGdr5oHGzicMX8Ysixc8KvhfpSPioJysti2rkcLk8VlcUe1N1jNINieNKbqoh+2dzvK+joQPkmO0c2NOQc0k0ctZcVH8jnDkqiLjLGsueV71P1CaNDOHZoAEgBJJrX1r36-1Cf5qf8jZb4XuZvNqWaG4oZrpiGyHJuzaLD4rg+KK6q2IeWrHlSerxnSSbvDUI7IK0QJviMH6FogSwOAkCFVnsK5zH6YqBpRIZhr4CTdshupxrShokGAhBYGwFCiPh9rTr+0QRp2cLwricR+m40TIikUSHOGUSIdGJ6oRxrBcTxfFiOoVgDLaBGQkRCAicKiLVpJv62LWaIxD4KTFlMXhNu4LGUmx1BsMy6YyAA6oCwKCQWFhOs4VCzhGKJEgukq2aByQ4niBJSkSJJZJq5AYBAcBmGpKGUGC74mWFCAALREn65XIg2US+NKZbIu4oYeTGp5oc8xXGQ6n7SlYDjpPCmihgE+yAX6v4OIqLhwt4XheqpPaFf2570smWGEXmPXTikLpuh60HehGfrbi640jSNjFRW16nsQOVDabxFDdUJfWxINVZoqNRL7M4k0ltuvhois-h+J4LW3St7ClZOpXjOVoo0ZoA24lsqWCsSpKZUAA */
   createMachine<SudokuContext, SudokuEvent>(
     {
       predictableActionArguments: true,
@@ -42,6 +47,16 @@ export const sudokuMachine =
       states: {
         playing: {
           entry: ["generateGrid", "resetTimer"],
+          invoke: {
+            id: "timerInterval",
+            src: (context, event) => (callback, onReceive) => {
+              const id = setInterval(
+                () => callback({ type: "TICKTIMER" }),
+                1000,
+              );
+              return () => clearInterval(id);
+            },
+          },
 
           states: {
             waitinteraction: {
@@ -104,6 +119,12 @@ export const sudokuMachine =
                   internal: true,
                 },
 
+                TICKTIMER: {
+                  actions: ["tick"],
+                  target: "waitinteraction",
+                  internal: true,
+                },
+
                 SLAM: {
                   target: "waitinteraction",
                   internal: false,
@@ -142,6 +163,10 @@ export const sudokuMachine =
         past: [],
         future: [],
         slamRef: undefined,
+        timer: {
+          started: Date.now(),
+          current: Date.now(),
+        },
       },
       initial: "playing",
       id: "SudokuMachine",
@@ -340,6 +365,18 @@ export const sudokuMachine =
           },
         ),
         cancelSlamming: cancel("slam"),
+        resetTimer: assign({
+          timer: (context) => ({
+            started: Date.now(),
+            current: Date.now(),
+          }),
+        }),
+        tick: assign({
+          timer: (context) => ({
+            ...context.timer,
+            current: Date.now(),
+          }),
+        }),
       },
       guards: {
         isWin: (context, event) => false,
