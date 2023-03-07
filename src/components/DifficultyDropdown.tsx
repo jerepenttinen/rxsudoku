@@ -1,5 +1,4 @@
-import clsx from "clsx";
-import { For, createSignal } from "solid-js";
+import { For } from "solid-js";
 import { sudoku } from "../sudoku";
 import {
   Menu,
@@ -9,6 +8,7 @@ import {
   PopoverPanel,
   Transition,
 } from "solid-headless";
+import { IoSettingsSharp } from "solid-icons/io";
 
 const difficulties = [
   {
@@ -40,8 +40,8 @@ export default function DifficultyDropdown() {
     <Popover defaultOpen={false} class="relative z-10">
       {({ isOpen, setState }) => (
         <>
-          <PopoverButton class="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-            <span>GEAR ICON</span>
+          <PopoverButton class="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2.5 text-center text-lg font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            <IoSettingsSharp />
           </PopoverButton>
           <Transition
             show={isOpen()}
