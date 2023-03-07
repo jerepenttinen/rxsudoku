@@ -6,7 +6,7 @@ export default function Timer() {
     new Date(timer.current - timer.started).toISOString().slice(14, 19);
 
   return (
-    <div class="font-mono text-xl text-gray-800 dark:text-white">
+    <div class="pointer-events-none select-none font-mono text-xl text-gray-800 dark:text-white">
       {display()}
     </div>
   );
