@@ -46,7 +46,7 @@ function Mark({ cell, number }: { cell: string; number: number }) {
       >
         <span
           class={
-            "pointer-events-none select-none align-top text-[1.8vw] md:text-lg"
+            "pointer-events-none select-none align-top text-[1.8vw] md:text-base"
           }
         >
           {number}
@@ -96,7 +96,7 @@ function Cell({ cell }: { cell: string }) {
       >
         <span
           class={clsx(
-            "animate-appear pointer-events-none select-none text-[5.5vw] motion-reduce:animate-none md:text-5xl",
+            "animate-appear pointer-events-none select-none text-[5.5vw] motion-reduce:animate-none md:text-4xl",
             {
               "text-zinc-900 dark:text-white": prefilled(),
               "text-blue-500 dark:text-blue-400": !prefilled(),
