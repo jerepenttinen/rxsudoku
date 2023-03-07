@@ -5,16 +5,16 @@ import { RadioGroup, RadioGroupOption } from "solid-headless";
 
 const actions = [
   {
+    name: "Highlight",
+    color: "blue",
+  },
+  {
     name: "Set",
     color: "red",
   },
   {
     name: "Mark",
     color: "purple",
-  },
-  {
-    name: "Highlight",
-    color: "blue",
   },
 ] as const;
 type Action = (typeof actions)[number];
@@ -76,7 +76,7 @@ function ActionButtons() {
 
   return (
     <div class="flex w-full flex-col gap-4">
-      <div class="inline-flex w-full select-none" role="group">
+      <div class="grid select-none grid-cols-9" role="group">
         <For each={[1, 2, 3, 4, 5, 6, 7, 8, 9]}>
           {(num) => (
             <button
@@ -104,7 +104,7 @@ function ActionButtons() {
         </For>
       </div>
       <RadioGroup
-        class="inline-flex w-full"
+        class="grid w-full grid-cols-3"
         value={action()}
         onChange={setAction}
       >
@@ -113,7 +113,7 @@ function ActionButtons() {
             <RadioGroupOption
               value={act}
               class={clsx(
-                "flex flex-grow border-t border-b border-r py-2 text-base font-medium text-gray-900 first:rounded-l-lg last:rounded-r-lg",
+                "flex border-t border-b border-r py-2 text-base font-medium text-gray-900 first:rounded-l-lg last:rounded-r-lg",
                 action().name === act.name && {
                   "z-10 ring-2": true,
                   "ring-blue-700 dark:ring-blue-500": act.color === "blue",
