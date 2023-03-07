@@ -18,6 +18,10 @@ export function initializeGrid(): Grid {
   return result;
 }
 
+export function toStringLine(grid: Grid) {
+  return Constants.CELLS.map((cell) => grid.cells[cell].digit).join("");
+}
+
 export function load(from: string): Grid {
   const result = initializeGrid();
 

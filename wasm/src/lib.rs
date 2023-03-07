@@ -111,3 +111,13 @@ fn grade_deductions(deductions: Deductions) -> Grade {
         return Grade::Beginner;
     }
 }
+
+#[wasm_bindgen]
+pub fn is_win(grid: String) -> bool {
+    if let Ok(grid) = Sudoku::from_str_line(grid.as_str()) {
+        return grid.is_solved();
+    } else {
+        // Ignore error like a genius
+        return false;
+    }
+}

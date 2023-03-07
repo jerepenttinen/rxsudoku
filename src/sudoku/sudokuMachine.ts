@@ -1,9 +1,14 @@
 import { assign, createMachine, actions, spawn } from "xstate";
 import { Grid } from "../generator/types";
-import { getPeerDigits, initializeGrid, load } from "../generator/sudoku";
+import {
+  getPeerDigits,
+  initializeGrid,
+  load,
+  toStringLine,
+} from "../generator/sudoku";
 import constants from "../generator/constants";
 import { nextCell, nextCellBySubgrid } from "./movements";
-import { generate_grid_of_grade } from "./aivot";
+import { generate_grid_of_grade, is_win } from "./aivot";
 
 type SudokuContext = {
   grid: Grid;
@@ -379,7 +384,9 @@ export const sudokuMachine =
         }),
       },
       guards: {
-        isWin: (context, event) => false,
+        isWin: (context, event) => {
+          return is_win(toStringLine(context.grid));
+        },
         isValidSetCell: (context, event) => {
           if (event.type !== "SETCELL") {
             return false;

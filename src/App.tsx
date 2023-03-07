@@ -4,6 +4,7 @@ import ActionButtons from "./components/ActionButtons";
 import DifficultyDropdown from "./components/DifficultyDropdown";
 import UndoButton from "./components/UndoButton";
 import Timer from "./components/Timer";
+import WinAlert from "./components/WinAlert";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         </div>
         <Board />
         <ActionButtons />
+        <WinAlert />
       </div>
     </div>
   );
