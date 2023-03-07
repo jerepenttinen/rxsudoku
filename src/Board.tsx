@@ -137,7 +137,7 @@ const blocks = [
 
 function Board() {
   return (
-    <div class="grid aspect-square w-full grid-cols-3 grid-rows-3 bg-zinc-50 text-center drop-shadow-2xl dark:bg-gray-700 md:max-w-screen-md">
+    <div class="grid aspect-square w-full grid-cols-3 grid-rows-3 bg-zinc-50 text-center drop-shadow-2xl dark:bg-gray-700">
       <For each={blocks}>{(block, i) => <Block list={block} />}</For>
     </div>
   );

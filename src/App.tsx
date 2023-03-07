@@ -5,10 +5,12 @@ import DifficultyButtons from "./DifficultyButtons";
 
 function App() {
   return (
-    <div class="flex h-full min-h-screen flex-col items-center gap-4 py-10 dark:bg-gray-900">
-      <Board />
-      <HighlightButtons />
-      <DifficultyButtons />
+    <div class="flex h-full min-h-screen flex-col items-center py-10 dark:bg-gray-900">
+      <div class="flex w-full flex-col md:max-w-screen-md">
+        <DifficultyButtons />
+        <Board />
+        <HighlightButtons />
+      </div>
     </div>
   );
 }
