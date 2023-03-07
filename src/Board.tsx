@@ -17,34 +17,41 @@ function Mark({ cell, number }: { cell: string; number: number }) {
     context.grid.cells[cell].marks[context.highlight] ?? false;
 
   return (
-    <div
-      class={clsx(
-        "h-full w-full transition-all ease-in-out motion-reduce:transition-none dark:hover:shadow-[inset_0em_0em_0em_10em_rgba(1,1,1,0.12)]",
-        {
-          "hover:shadow-[inset_0em_0em_0em_5em_rgba(29,78,216,0.15)]":
-            highlighted(),
-          "hover:shadow-[inset_0em_0em_0em_5em_rgba(0,0,0,0.12)]":
-            !highlighted(),
-          "text-transparent": !showMark(),
-        },
-        showMark()
-          ? {
-              "text-blue-800 dark:text-blue-200": highlighted(),
-              "text-gray-700 dark:text-gray-300": !highlighted(),
-            }
-          : {
-              "hover:text-blue-800/60 dark:hover:text-blue-200/60":
-                highlighted(),
-              "hover:text-gray-700/60 dark:hover:text-gray-300/60":
-                !highlighted(),
-            },
-      )}
-      onClick={handleClick}
-      onDblClick={handleDoubleClick}
-    >
-      <span class={"pointer-events-none select-none align-top text-[1.8vmin]"}>
-        {number}
-      </span>
+    <div class="relative">
+      <div class="absolute z-10 h-full w-full md:hidden"></div>
+      <div
+        class={clsx(
+          "h-full w-full transition-all ease-in-out motion-reduce:transition-none dark:hover:shadow-[inset_0em_0em_0em_10em_rgba(1,1,1,0.12)]",
+          {
+            "hover:shadow-[inset_0em_0em_0em_5em_rgba(29,78,216,0.15)]":
+              highlighted(),
+            "hover:shadow-[inset_0em_0em_0em_5em_rgba(0,0,0,0.12)]":
+              !highlighted(),
+            "text-transparent": !showMark(),
+          },
+          showMark()
+            ? {
+                "text-blue-800 dark:text-blue-200": highlighted(),
+                "text-gray-700 dark:text-gray-300": !highlighted(),
+              }
+            : {
+                "hover:text-blue-800/60 dark:hover:text-blue-200/60":
+                  highlighted(),
+                "hover:text-gray-700/60 dark:hover:text-gray-300/60":
+                  !highlighted(),
+              },
+        )}
+        onClick={handleClick}
+        onDblClick={handleDoubleClick}
+      >
+        <span
+          class={
+            "pointer-events-none select-none align-top text-[1.8vw] md:text-lg"
+          }
+        >
+          {number}
+        </span>
+      </div>
     </div>
   );
 }
@@ -89,7 +96,7 @@ function Cell({ cell }: { cell: string }) {
       >
         <span
           class={clsx(
-            "animate-appear pointer-events-none select-none text-[5.5vmin] motion-reduce:animate-none",
+            "animate-appear pointer-events-none select-none text-[5.5vw] motion-reduce:animate-none md:text-5xl",
             {
               "text-zinc-900 dark:text-white": prefilled(),
               "text-blue-500 dark:text-blue-400": !prefilled(),
@@ -130,7 +137,7 @@ const blocks = [
 
 function Board() {
   return (
-    <div class="grid h-[80vmin] w-[80vmin] grid-cols-3 grid-rows-3 bg-zinc-50 text-center drop-shadow-2xl dark:bg-gray-700">
+    <div class="grid aspect-square w-full grid-cols-3 grid-rows-3 bg-zinc-50 text-center drop-shadow-2xl dark:bg-gray-700 md:max-w-screen-md">
       <For each={blocks}>{(block, i) => <Block list={block} />}</For>
     </div>
   );
