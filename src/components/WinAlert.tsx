@@ -11,13 +11,11 @@ import { sudoku } from "../sudoku";
 export default function WinAlert() {
   const isOpen = () => sudoku.state.value === "won";
 
+  const close = () => sudoku.send({ type: "NEWGAME" });
+
   return (
     <Transition appear show={isOpen()}>
-      <Dialog
-        isOpen
-        class="fixed inset-0 z-10 overflow-y-auto"
-        onClose={() => sudoku.send({ type: "NEWGAME" })}
-      >
+      <Dialog isOpen class="fixed inset-0 z-10 overflow-y-auto" onClose={close}>
         <div class="flex min-h-screen items-center justify-center px-4">
           <TransitionChild
             enter="ease-out duration-300"
@@ -54,6 +52,7 @@ export default function WinAlert() {
                 <button
                   type="button"
                   class="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  onClick={close}
                 >
                   Play again
                 </button>
