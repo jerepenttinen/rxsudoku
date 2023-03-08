@@ -8,7 +8,6 @@ import {
   PopoverPanel,
   Transition,
 } from "solid-headless";
-import { IoSettingsSharp } from "solid-icons/io";
 
 const difficulties = [
   {
@@ -40,8 +39,8 @@ export default function DifficultyDropdown() {
     <Popover defaultOpen={false} class="relative z-10">
       {({ isOpen, setState }) => (
         <>
-          <PopoverButton class="inline-flex items-center rounded-lg bg-blue-700 px-4 py-2.5 text-center text-lg font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-            <IoSettingsSharp />
+          <PopoverButton class="inline-flex h-10 w-24 items-center rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            <span class="mx-auto">{difficulties[context.difficulty].name}</span>
           </PopoverButton>
           <Transition
             show={isOpen()}
@@ -60,23 +59,6 @@ export default function DifficultyDropdown() {
                 as="ul"
                 class="space-y-1 p-3 text-sm text-gray-700 dark:text-gray-200"
               >
-                <MenuItem as="li">
-                  <div class="flex rounded hover:bg-gray-100 dark:hover:bg-gray-600">
-                    <button
-                      type="button"
-                      class="w-full select-none rounded p-1.5 text-sm font-medium text-gray-900 dark:text-gray-300"
-                      onClick={() => {
-                        sudoku.send({
-                          type: "RESETGAME",
-                          difficulty: context.difficulty,
-                        });
-                        setState(false);
-                      }}
-                    >
-                      New game
-                    </button>
-                  </div>
-                </MenuItem>
                 <For each={difficulties}>
                   {(difficulty) => (
                     <MenuItem
