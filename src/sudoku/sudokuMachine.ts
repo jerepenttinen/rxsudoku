@@ -8,7 +8,7 @@ import {
 } from "../generator/sudoku";
 import constants from "../generator/constants";
 import { nextCell, nextCellBySubgrid } from "./movements";
-import { generate_grid_of_grade, is_win } from "./aivot";
+import { generate_grid_of_grade, is_win, Tip } from "./aivot";
 
 type SudokuContext = {
   grid: Grid;
