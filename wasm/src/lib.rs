@@ -7,6 +7,8 @@ use sudoku::strategy::deduction::Deductions;
 use utils::set_panic_hook;
 use wasm_bindgen::prelude::*;
 
+use anyhow::anyhow;
+use anyhow::Result;
 use sudoku::strategy::Strategy;
 use sudoku::strategy::StrategySolver;
 use sudoku::Sudoku;
@@ -117,6 +119,13 @@ pub fn is_win(grid: String) -> bool {
     }
 }
 
+#[wasm_bindgen(getter_with_clone)]
+#[derive(Clone)]
+pub struct LockedCandidate {
+    pub digit: usize,
+    pub conflict_cells: Vec<usize>,
+}
+
 #[wasm_bindgen]
 #[derive(Clone, Copy)]
 pub struct HiddenSingle {
@@ -142,83 +151,99 @@ pub struct Tip {
 
     #[builder(setter(into, strip_option), default)]
     pub naked_single: Option<NakedSingle>,
+
+    #[builder(setter(into, strip_option), default)]
+    pub locked_candidate: Option<LockedCandidate>,
 }
 
 #[wasm_bindgen]
-pub fn give_tip(grid: String) -> Tip {
-    if let Ok(grid) = Sudoku::from_str_line(grid.as_str()) {
-        let solver = StrategySolver::from_sudoku(grid);
-        if let Ok((_, deductions)) = solver.solve(&STRATEGIES) {
-            if let Some(jou) = deductions.iter().next() {
-                return match jou {
-                    sudoku::strategy::Deduction::NakedSingles(cand) => TipBuilder::default()
+pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
+    if let Ok(deductions) = get_deductions(grid) {
+        for deduction in deductions.iter() {
+            match deduction {
+                sudoku::strategy::Deduction::NakedSingles(cand) => {
+                    return TipBuilder::default()
                         .strategy("NakedSingle")
                         .naked_single(NakedSingle {
                             cell: cand.cell.as_index(),
-                            digit: cand.digit.as_index(),
+                            digit: cand.digit.get() as usize,
                         })
                         .build()
-                        .unwrap(),
-                    sudoku::strategy::Deduction::HiddenSingles(cand, _) => TipBuilder::default()
+                        .unwrap()
+                }
+                sudoku::strategy::Deduction::HiddenSingles(cand, _) => {
+                    return TipBuilder::default()
                         .strategy("HiddenSingle")
                         .hidden_single(HiddenSingle {
                             cell: cand.cell.as_index(),
-                            digit: cand.digit.as_index(),
+                            digit: cand.digit.get() as usize,
                         })
                         .build()
-                        .unwrap(),
-                    // sudoku::strategy::Deduction::LockedCandidates {
-                    //     digit,
-                    //     miniline,
-                    //     is_pointing,
-                    //     conflicts,
-                    // } => miniline.categorize(),
-                    // sudoku::strategy::Deduction::Subsets {
-                    //     house,
-                    //     positions,
-                    //     digits,
-                    //     conflicts,
-                    // } => todo!(),
-                    // sudoku::strategy::Deduction::BasicFish {
-                    //     digit,
-                    //     lines,
-                    //     positions,
-                    //     conflicts,
-                    // } => todo!(),
-                    // sudoku::strategy::Deduction::Fish {
-                    //     digit,
-                    //     base,
-                    //     cover,
-                    //     conflicts,
-                    // } => todo!(),
-                    // sudoku::strategy::Deduction::Wing {
-                    //     hinge,
-                    //     hinge_digits,
-                    //     pincers,
-                    //     conflicts,
-                    // } => todo!(),
-                    // sudoku::strategy::Deduction::AvoidableRectangle { lines, conflicts } => todo!(),
-                    _ => TipBuilder::default()
-                        .strategy("NoStrategy")
+                        .unwrap()
+                }
+                sudoku::strategy::Deduction::LockedCandidates {
+                    digit,
+                    miniline: _,
+                    is_pointing: _,
+                    conflicts,
+                } => {
+                    let digit_num = digit.get() as usize;
+                    let cells: Vec<usize> = conflicts
+                        .into_iter()
+                        .map(|c| c.cell.as_index())
+                        .filter(|i| (marks[i.clone()] & (1 << digit_num)) > 0)
+                        .collect();
+                    if cells.is_empty() {
+                        continue;
+                    }
+                    return TipBuilder::default()
+                        .strategy("LockedCandidate")
+                        .locked_candidate(LockedCandidate {
+                            digit: digit_num,
+                            conflict_cells: cells,
+                        })
                         .build()
-                        .unwrap(),
-                };
-            } else {
-                return TipBuilder::default()
-                    .strategy("NoStrategy")
-                    .build()
-                    .unwrap();
+                        .unwrap();
+                }
+
+                // sudoku::strategy::Deduction::Subsets {
+                //     house,
+                //     positions,
+                //     digits,
+                //     conflicts,
+                // } => todo!(),
+                // sudoku::strategy::Deduction::BasicFish {
+                //     digit,
+                //     lines,
+                //     positions,
+                //     conflicts,
+                // } => todo!(),
+                // sudoku::strategy::Deduction::Fish {
+                //     digit,
+                //     base,
+                //     cover,
+                //     conflicts,
+                // } => todo!(),
+                // sudoku::strategy::Deduction::Wing {
+                //     hinge,
+                //     hinge_digits,
+                //     pincers,
+                //     conflicts,
+                // } => todo!(),
+                _ => break,
             }
-        } else {
-            return TipBuilder::default()
-                .strategy("NoStrategy")
-                .build()
-                .unwrap();
         }
+    }
+    // }
+    TipBuilder::default().strategy("Unknown").build().unwrap()
+}
+
+fn get_deductions(grid: String) -> Result<Deductions> {
+    let sudoku = Sudoku::from_str_line(grid.as_str())?;
+    let solver = StrategySolver::from_sudoku(sudoku);
+    if let Ok((_, deductions)) = solver.solve(&STRATEGIES) {
+        Ok(deductions)
     } else {
-        return TipBuilder::default()
-            .strategy("NoStrategy")
-            .build()
-            .unwrap();
+        Err(anyhow!("Fail!"))
     }
 }

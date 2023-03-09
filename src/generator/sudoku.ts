@@ -22,6 +22,19 @@ export function toStringLine(grid: Grid) {
   return Constants.CELLS.map((cell) => grid.cells[cell].digit).join("");
 }
 
+export function toMarksBitsets(grid: Grid) {
+  return Constants.CELLS.map((cell) => {
+    const marks = grid.cells[cell].marks;
+    let result = 0;
+    for (let i = 1; i <= 9; i++) {
+      if (marks[i]) {
+        result |= 1 << i;
+      }
+    }
+    return result;
+  });
+}
+
 export function load(from: string): Grid {
   const result = initializeGrid();
 

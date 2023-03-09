@@ -26,6 +26,7 @@ wee_alloc = { version = "0.4.5", optional = true }
 sudoku = "0.7.0"
 rand = { version = "0.7.3", features = ["wasm-bindgen"] }
 derive_builder = "0.12.0"
+anyhow = "1.0.69"
 
 [patch.crates-io]
 sudoku = { git = "https://github.com/Emerentius/sudoku" }
