@@ -14,7 +14,7 @@ export default function BrainButton() {
           new Int32Array(toMarksBitsets(context.grid)),
         );
         switch (tip.strategy) {
-          case "NakedSingle": {
+          case "NakedSingles": {
             const data = tip.naked_single!;
             const cell = constants.CELLS[data.cell];
             sudoku.send({
@@ -29,7 +29,7 @@ export default function BrainButton() {
             });
             break;
           }
-          case "HiddenSingle": {
+          case "HiddenSingles": {
             const data = tip.hidden_single!;
             const cell = constants.CELLS[data.cell];
             sudoku.send({
@@ -44,7 +44,7 @@ export default function BrainButton() {
             });
             break;
           }
-          case "LockedCandidate": {
+          case "LockedCandidates": {
             const data = tip.locked_candidate!;
             const cells = [...data.conflict_cells].map(
               (cell) => constants.CELLS[cell],
@@ -58,7 +58,26 @@ export default function BrainButton() {
                 mark: data.digit,
               });
             }
+            break;
           }
+          case "NakedPairs":
+          case "NakedTriples":
+          case "NakedQuads":
+          case "HiddenPairs":
+          case "HiddenTriples":
+          case "HiddenQuads":
+            console.log(
+              [...tip.subset!.conflict_cells].map(
+                (cell) => constants.CELLS[cell],
+              ),
+              tip.subset?.conflict_digits,
+              tip.subset?.digits,
+              [...tip.subset!.positions].map((cell) => constants.CELLS[cell]),
+            );
+            console.log(tip.strategy);
+            break;
+          default:
+            console.log(tip.strategy);
         }
       }}
     >
