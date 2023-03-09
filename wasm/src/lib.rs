@@ -237,8 +237,8 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                             Subset {
                                 positions: positions.into_iter().map(|p| house.cell_at(p).as_index()).collect(),
                                 digits: digits.into_iter().map(|d| d.get() as usize).collect(),
-                                conflict_cells: cells.clone().into_iter().map(|(i, _)| i).collect(),
-                                conflict_digits: cells.into_iter().map(|(_, i)| i).collect(),
+                                conflict_cells: cells.iter().map(|(i, _)| *i).collect(),
+                                conflict_digits: cells.iter().map(|(_, i)| *i).collect(),
                             }
                         )
                         .build()
