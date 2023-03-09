@@ -1,7 +1,5 @@
 mod utils;
 
-use std::collections::HashSet;
-
 use derive_builder::Builder;
 use sudoku::strategy::deduction::Deductions;
 use utils::set_panic_hook;
@@ -11,30 +9,31 @@ use anyhow::anyhow;
 use anyhow::Result;
 use sudoku::board::positions::{CellAt};
 use sudoku::strategy::Strategy;
+use sudoku::strategy::Strategy::*;
 use sudoku::strategy::StrategySolver;
 use sudoku::Sudoku;
 
 const STRATEGIES: &[Strategy] = &[
     // difficulty as assigned by
     // SudokuExplainer
-    Strategy::NakedSingles,     // 23
-    Strategy::HiddenSingles,    // 15
-    Strategy::LockedCandidates, // 28
-    Strategy::NakedPairs,       // 30
-    Strategy::XWing,            // 32
-    Strategy::HiddenPairs,      // 34
-    Strategy::NakedTriples,     // 36
-    Strategy::Swordfish,        // 38
-    Strategy::HiddenTriples,    // 40
-    Strategy::NakedQuads,       // 50
+    NakedSingles,     // 23
+    HiddenSingles,    // 15
+    LockedCandidates, // 28
+    NakedPairs,       // 30
+    XWing,            // 32
+    HiddenPairs,      // 34
+    NakedTriples,     // 36
+    Swordfish,        // 38
+    HiddenTriples,    // 40
+    NakedQuads,       // 50
     // Strategy::Jellyfish,        // 52
-    Strategy::HiddenQuads, // 54
+    HiddenQuads, // 54
 ];
 
 #[wasm_bindgen(getter_with_clone)]
 pub struct Grid {
     pub grid: String,
-    pub difficulty: i32,
+    pub difficulty: Grade,
 }
 
 #[wasm_bindgen]
@@ -48,8 +47,7 @@ pub fn generate_grid() -> Grid {
         if let Ok((_, deductions)) = solver.solve(&STRATEGIES) {
             return Grid {
                 grid: sudoku.to_str_line().to_string(),
-                difficulty: grade_deductions(deductions) as i32,
-                // difficulty: deductions.iter().map(|d| score_strat(d.strategy())).sum(),
+                difficulty: grade_deductions(deductions),
             };
         }
     }
@@ -68,7 +66,7 @@ pub fn generate_grid_of_grade(wanted: i32) -> Grid {
             if grade as i32 == wanted {
                 return Grid {
                     grid: sudoku.to_str_line().to_string(),
-                    difficulty: grade as i32,
+                    difficulty: grade,
                 };
             }
         }
@@ -86,23 +84,19 @@ pub enum Grade {
 }
 
 fn grade_deductions(deductions: Deductions) -> Grade {
-    let strategies: HashSet<i32> = deductions.iter().map(|d| d.strategy() as i32).collect();
+    let strategies: usize = deductions.iter().fold(0, |a, d| a | (1 << d.strategy() as usize));
 
-    return if strategies.contains(&(Strategy::XWing as i32))
-        || strategies.contains(&(Strategy::Swordfish as i32))
-        || strategies.contains(&(Strategy::HiddenQuads as i32))
-    {
+    let has = |s: Strategy| -> bool {
+        return (strategies & (1 << (s as usize))) != 0
+    };
+
+    return if has(XWing) || has(Swordfish) || has(HiddenQuads) {
         Grade::Hard
-    } else if strategies.contains(&(Strategy::NakedQuads as i32))
-        || strategies.contains(&(Strategy::HiddenTriples as i32))
-        || strategies.contains(&(Strategy::HiddenPairs as i32))
-    {
+    } else if has(NakedQuads) || has(HiddenTriples) || has(HiddenPairs) {
         Grade::Tricky
-    } else if strategies.contains(&(Strategy::NakedPairs as i32))
-        || strategies.contains(&(Strategy::NakedTriples as i32))
-    {
+    } else if has(NakedPairs) || has(NakedTriples) {
         Grade::Medium
-    } else if strategies.contains(&(Strategy::LockedCandidates as i32)) {
+    } else if has(LockedCandidates) {
         Grade::Easy
     } else {
         Grade::Beginner
@@ -282,23 +276,23 @@ fn get_deductions(grid: String) -> Result<Deductions> {
 
 fn strategy_to_name(strategy: Strategy) -> String {
     match strategy {
-        Strategy::NakedSingles => "NakedSingles",
-        Strategy::HiddenSingles => "HiddenSingles",
-        Strategy::LockedCandidates => "LockedCandidates",
-        Strategy::NakedPairs => "NakedPairs",
-        Strategy::NakedTriples => "NakedTriples",
-        Strategy::NakedQuads => "NakedQuads",
-        Strategy::HiddenPairs => "HiddenPairs",
-        Strategy::HiddenTriples => "HiddenTriples",
-        Strategy::HiddenQuads => "HiddenQuads",
-        Strategy::XWing => "XWing",
-        Strategy::Swordfish => "Swordfish",
-        Strategy::Jellyfish => "Jellyfish",
-        Strategy::XyWing => "XyWing",
-        Strategy::XyzWing => "XyzWing",
-        Strategy::MutantSwordfish => "MutantSwordfish",
-        Strategy::MutantJellyfish => "MutantJellyfish",
-        Strategy::AvoidableRectangles => "AvoidableRectangles",
+        NakedSingles => "NakedSingles",
+        HiddenSingles => "HiddenSingles",
+        LockedCandidates => "LockedCandidates",
+        NakedPairs => "NakedPairs",
+        NakedTriples => "NakedTriples",
+        NakedQuads => "NakedQuads",
+        HiddenPairs => "HiddenPairs",
+        HiddenTriples => "HiddenTriples",
+        HiddenQuads => "HiddenQuads",
+        XWing => "XWing",
+        Swordfish => "Swordfish",
+        Jellyfish => "Jellyfish",
+        XyWing => "XyWing",
+        XyzWing => "XyzWing",
+        MutantSwordfish => "MutantSwordfish",
+        MutantJellyfish => "MutantJellyfish",
+        AvoidableRectangles => "AvoidableRectangles",
         _ => "Unknown"
     }.into()
 }
