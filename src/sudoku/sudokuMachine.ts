@@ -8,7 +8,7 @@ import {
 } from "../generator/sudoku";
 import constants from "../generator/constants";
 import { nextCell, nextCellBySubgrid } from "./movements";
-import { generate_grid_of_grade, is_win, Tip } from "./aivot";
+import { generate_grid_of_grade, is_win } from "./aivot";
 
 type SudokuContext = {
   grid: Grid;
@@ -39,6 +39,7 @@ type SudokuEvent =
   | { type: "SETCURSOR"; cell: string }
   | { type: "MOVECURSOR"; direction: Direction; subgrid?: boolean }
   | { type: "TOGGLEMARK"; cell: string; mark: number }
+  | { type: "TOGGLEMARKS"; marks: { cell: string; mark: number }[] }
   | { type: "SETCELL"; cell: string; digit: number };
 
 const { send, cancel } = actions;
@@ -54,7 +55,7 @@ export const sudokuMachine =
           entry: ["generateGrid", "resetTimer"],
           invoke: {
             id: "timerInterval",
-            src: (context, event) => (callback, onReceive) => {
+            src: () => (callback) => {
               const id = setInterval(
                 () => callback({ type: "TICKTIMER" }),
                 1000,
@@ -78,6 +79,13 @@ export const sudokuMachine =
                   target: "waitinteraction",
                   internal: false,
                   actions: ["cancelSlamming", "addToPast", "toggleMark"],
+                },
+
+                TOGGLEMARKS: {
+                  cond: "isValidToggleMarks",
+                  target: "waitinteraction",
+                  internal: false,
+                  actions: ["cancelSlamming", "addToPast", "toggleMarks"],
                 },
 
                 RESETGAME: {
@@ -253,15 +261,13 @@ export const sudokuMachine =
             if (event.type !== "SETCELL") {
               throw Error(`setCell called by ${event.type}`);
             }
+            const cells = structuredClone(context.grid.cells);
+
+            cells[event.cell].digit = event.digit;
+
             return {
               ...context.grid,
-              cells: {
-                ...context.grid.cells,
-                [event.cell]: {
-                  ...context.grid.cells[event.cell],
-                  digit: event.digit,
-                },
-              },
+              cells,
             };
           },
         }),
@@ -271,18 +277,31 @@ export const sudokuMachine =
               throw Error(`toggleMark called by ${event.type}`);
             }
 
-            const marks = structuredClone(context.grid.cells[event.cell].marks);
-            marks[event.mark] = !marks[event.mark];
+            const cells = structuredClone(context.grid.cells);
+            cells[event.cell].marks[event.mark] =
+              !cells[event.cell].marks[event.mark];
 
             return {
               ...context.grid,
-              cells: {
-                ...context.grid.cells,
-                [event.cell]: {
-                  ...context.grid.cells[event.cell],
-                  marks,
-                },
-              },
+              cells,
+            };
+          },
+        }),
+        toggleMarks: assign({
+          grid: (context, event) => {
+            if (event.type !== "TOGGLEMARKS") {
+              throw Error(`toggleMark called by ${event.type}`);
+            }
+
+            const cells = structuredClone(context.grid.cells);
+
+            for (const it of event.marks) {
+              cells[it.cell].marks[it.mark] = !cells[it.cell].marks[it.mark];
+            }
+
+            return {
+              ...context.grid,
+              cells,
             };
           },
         }),
@@ -371,7 +390,7 @@ export const sudokuMachine =
         ),
         cancelSlamming: cancel("slam"),
         resetTimer: assign({
-          timer: (context) => ({
+          timer: (_) => ({
             started: Date.now(),
             current: Date.now(),
           }),
@@ -384,7 +403,7 @@ export const sudokuMachine =
         }),
       },
       guards: {
-        isWin: (context, event) => {
+        isWin: (context) => {
           return is_win(toStringLine(context.grid));
         },
         isValidSetCell: (context, event) => {
@@ -401,11 +420,7 @@ export const sudokuMachine =
           }
 
           const peerDigits = getPeerDigits(context.grid.cells, event.cell);
-          if (peerDigits.has(event.digit)) {
-            return false;
-          }
-
-          return true;
+          return !peerDigits.has(event.digit);
         },
         isValidSetCursor: (context, event) => {
           if (event.type !== "SETCURSOR") {
@@ -413,6 +428,18 @@ export const sudokuMachine =
           }
 
           return constants.CELLS.includes(event.cell);
+        },
+        isValidToggleMarks: (context, event) => {
+          if (event.type !== "TOGGLEMARKS") {
+            return false;
+          }
+          for (const it of event.marks) {
+            const peerDigits = getPeerDigits(context.grid.cells, it.cell);
+            if (peerDigits.has(it.mark)) {
+              return false;
+            }
+          }
+          return true;
         },
         isValidToggleMark: (context, event) => {
           if (event.type !== "TOGGLEMARK") {

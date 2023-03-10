@@ -50,18 +50,16 @@ export default function BrainButton() {
           }
           case "LockedCandidates": {
             const data = tip.locked_candidate!;
-            const cells = [...data.conflict_cells].map(
-              (cell) => constants.CELLS[cell],
-            );
+            const cells = toCellName(data.conflict_cells);
             console.log(data.digit, cells);
 
-            for (const cell of cells) {
-              sudoku.send({
-                type: "TOGGLEMARK",
+            sudoku.send({
+              type: "TOGGLEMARKS",
+              marks: cells.map((cell) => ({
                 cell,
                 mark: data.digit,
-              });
-            }
+              })),
+            });
             break;
           }
           case "NakedPairs":
@@ -71,9 +69,29 @@ export default function BrainButton() {
           case "HiddenTriples":
           case "HiddenQuads": {
             const data = tip.subset!;
+            const conflict_cells = toCellName(data.conflict_cells);
+            const conflict_digits = [...data.conflict_digits];
+            console.assert(
+              conflict_cells.length === conflict_digits.length,
+              "not the same length",
+            );
+            const marks = new Array<{ cell: string; mark: number }>(
+              conflict_cells.length,
+            );
+            for (let i = 0; i < conflict_cells.length; i++) {
+              marks[i] = {
+                cell: conflict_cells[i],
+                mark: conflict_digits[i],
+              };
+            }
+            sudoku.send({
+              type: "TOGGLEMARKS",
+              marks,
+            });
+
             console.log(
-              toCellName(data.conflict_cells),
-              data.conflict_digits,
+              conflict_cells,
+              conflict_digits,
               data.digits,
               toCellName(data.positions),
             );
@@ -84,6 +102,27 @@ export default function BrainButton() {
           case "Swordfish":
           case "Jellyfish": {
             const data = tip.fish!;
+
+            const conflict_cells = toCellName(data.conflict_cells);
+            const conflict_digits = [...data.conflict_digits];
+            console.assert(
+              conflict_cells.length === conflict_digits.length,
+              "not the same length",
+            );
+            const marks = new Array<{ cell: string; mark: number }>(
+              conflict_cells.length,
+            );
+            for (let i = 0; i < conflict_cells.length; i++) {
+              marks[i] = {
+                cell: conflict_cells[i],
+                mark: conflict_digits[i],
+              };
+            }
+            sudoku.send({
+              type: "TOGGLEMARKS",
+              marks,
+            });
+
             // with XWing data.positions are 2 corners of the XWing tl and br
             console.log(
               data.is_row,
