@@ -18,23 +18,9 @@ export default function BrainButton() {
           new Int32Array(toMarksBitsets(context.grid)),
         );
         switch (tip.strategy) {
-          case "NakedSingles": {
-            const data = tip.naked_single!;
-            const cell = constants.CELLS[data.cell];
-            sudoku.send({
-              type: "SETCURSOR",
-              cell,
-            });
-
-            sudoku.send({
-              type: "SETCELL",
-              cell,
-              digit: data.digit,
-            });
-            break;
-          }
+          case "NakedSingles":
           case "HiddenSingles": {
-            const data = tip.hidden_single!;
+            const data = tip.single!;
             const cell = constants.CELLS[data.cell];
             sudoku.send({
               type: "SETCURSOR",

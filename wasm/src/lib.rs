@@ -123,14 +123,7 @@ pub struct LockedCandidate {
 
 #[wasm_bindgen]
 #[derive(Clone, Copy)]
-pub struct HiddenSingle {
-    pub cell: usize,
-    pub digit: usize,
-}
-
-#[wasm_bindgen]
-#[derive(Clone, Copy)]
-pub struct NakedSingle {
+pub struct Single {
     pub cell: usize,
     pub digit: usize,
 }
@@ -161,10 +154,7 @@ pub struct Tip {
     pub strategy: String,
 
     #[builder(setter(into, strip_option), default)]
-    pub hidden_single: Option<HiddenSingle>,
-
-    #[builder(setter(into, strip_option), default)]
-    pub naked_single: Option<NakedSingle>,
+    pub single: Option<Single>,
 
     #[builder(setter(into, strip_option), default)]
     pub locked_candidate: Option<LockedCandidate>,
@@ -184,7 +174,7 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                 sudoku::strategy::Deduction::NakedSingles(candidate) => {
                     return TipBuilder::default()
                         .strategy("NakedSingles")
-                        .naked_single(NakedSingle {
+                        .single(Single {
                             cell: candidate.cell.as_index(),
                             digit: candidate.digit.get() as usize,
                         })
@@ -194,7 +184,7 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                 sudoku::strategy::Deduction::HiddenSingles(candidate, ..) => {
                     return TipBuilder::default()
                         .strategy("HiddenSingles")
-                        .hidden_single(HiddenSingle {
+                        .single(Single {
                             cell: candidate.cell.as_index(),
                             digit: candidate.digit.get() as usize,
                         })
