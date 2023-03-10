@@ -178,7 +178,7 @@ pub struct Tip {
 
 #[wasm_bindgen]
 pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
-    if let Ok(deductions) = get_deductions(grid) {
+    if let Ok(deductions) = get_deductions(grid.as_str()) {
         for deduction in deductions.iter() {
             match deduction {
                 sudoku::strategy::Deduction::NakedSingles(candidate) => {
@@ -318,11 +318,27 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
             }
         }
     }
-    TipBuilder::default().strategy("Unknown").build().unwrap()
+
+    TipBuilder::default().strategy(
+        if let Ok(solution_exists) = has_solution(grid.as_str()) {
+            if solution_exists {
+                "Unknown"
+            } else {
+                "Unsolvable"
+            }
+        } else {
+            "Invalid"
+        }
+    ).build().unwrap()
 }
 
-fn get_deductions(grid: String) -> Result<Deductions> {
-    let sudoku = Sudoku::from_str_line(grid.as_str())?;
+fn has_solution(grid: &str) -> Result<bool> {
+    let sudoku = Sudoku::from_str_line(grid)?;
+     Ok(sudoku.is_uniquely_solvable())
+}
+
+fn get_deductions(grid: &str) -> Result<Deductions> {
+    let sudoku = Sudoku::from_str_line(grid)?;
     let solver = StrategySolver::from_sudoku(sudoku);
     if let Ok((_, deductions)) = solver.solve(&STRATEGIES) {
         Ok(deductions)
