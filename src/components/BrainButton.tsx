@@ -3,6 +3,10 @@ import { toMarksBitsets, toStringLine } from "../generator/sudoku";
 import { sudoku } from "../sudoku";
 import { give_tip } from "../sudoku/aivot";
 
+function toCellName(u: Uint32Array) {
+  return [...u].map((cell) => constants.CELLS[cell]);
+}
+
 export default function BrainButton() {
   const { context } = sudoku.state;
   return (
@@ -65,17 +69,32 @@ export default function BrainButton() {
           case "NakedQuads":
           case "HiddenPairs":
           case "HiddenTriples":
-          case "HiddenQuads":
+          case "HiddenQuads": {
+            const data = tip.subset!;
             console.log(
-              [...tip.subset!.conflict_cells].map(
-                (cell) => constants.CELLS[cell],
-              ),
-              tip.subset?.conflict_digits,
-              tip.subset?.digits,
-              [...tip.subset!.positions].map((cell) => constants.CELLS[cell]),
+              toCellName(data.conflict_cells),
+              data.conflict_digits,
+              data.digits,
+              toCellName(data.positions),
             );
             console.log(tip.strategy);
             break;
+          }
+          case "XWing":
+          case "Swordfish":
+          case "Jellyfish": {
+            const data = tip.fish!;
+            // with XWing data.positions are 2 corners of the XWing tl and br
+            console.log(
+              data.is_row,
+              data.digit,
+              toCellName(data.positions),
+              data.conflict_digits,
+              toCellName(data.conflict_cells),
+            );
+            console.log(tip.strategy);
+            break;
+          }
           default:
             console.log(tip.strategy);
         }

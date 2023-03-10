@@ -7,7 +7,8 @@ use wasm_bindgen::prelude::*;
 
 use anyhow::anyhow;
 use anyhow::Result;
-use sudoku::board::positions::{CellAt};
+use sudoku::board::Candidate;
+use sudoku::board::positions::{CellAt, HouseType, LineType};
 use sudoku::strategy::Strategy;
 use sudoku::strategy::Strategy::*;
 use sudoku::strategy::StrategySolver;
@@ -87,7 +88,7 @@ fn grade_deductions(deductions: Deductions) -> Grade {
     let strategies: usize = deductions.iter().fold(0, |a, d| a | (1 << d.strategy() as usize));
 
     let has = |s: Strategy| -> bool {
-        return (strategies & (1 << (s as usize))) != 0
+        return (strategies & (1 << (s as usize))) != 0;
     };
 
     return if has(XWing) || has(Swordfish) || has(HiddenQuads) {
@@ -100,7 +101,7 @@ fn grade_deductions(deductions: Deductions) -> Grade {
         Grade::Easy
     } else {
         Grade::Beginner
-    }
+    };
 }
 
 #[wasm_bindgen]
@@ -143,6 +144,16 @@ pub struct Subset {
     pub conflict_digits: Vec<usize>,
 }
 
+#[wasm_bindgen(getter_with_clone)]
+#[derive(Clone)]
+pub struct Fish {
+    pub is_row: bool,
+    pub digit: usize,
+    pub positions: Vec<usize>,
+    pub conflict_cells: Vec<usize>,
+    pub conflict_digits: Vec<usize>,
+}
+
 #[derive(Builder)]
 #[wasm_bindgen(getter_with_clone)]
 pub struct Tip {
@@ -160,6 +171,9 @@ pub struct Tip {
 
     #[builder(setter(into, strip_option), default)]
     pub subset: Option<Subset>,
+
+    #[builder(setter(into, strip_option), default)]
+    pub fish: Option<Fish>,
 }
 
 #[wasm_bindgen]
@@ -191,11 +205,8 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                     digit, conflicts, ..
                 } => {
                     let digit_num = digit.get() as usize;
-                    let cells: Vec<usize> = conflicts
-                        .into_iter()
-                        .map(|c| c.cell.as_index())
-                        .filter(|i| (marks[*i] & (1 << digit_num)) > 0)
-                        .collect();
+                    let cells = conflicts_to_cells(conflicts, marks.as_ref());
+
                     if cells.is_empty() {
                         continue;
                     }
@@ -203,7 +214,7 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                         .strategy("LockedCandidates")
                         .locked_candidate(LockedCandidate {
                             digit: digit_num,
-                            conflict_cells: cells,
+                            conflict_cells: cells.iter().map(|s| s.cell).collect(),
                         })
                         .build()
                         .unwrap();
@@ -215,11 +226,7 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                     digits,
                     conflicts,
                 } => {
-                    let cells: Vec<(usize, usize)> = conflicts
-                        .into_iter()
-                        .map(|c| (c.cell.as_index(), c.digit.get() as usize))
-                        .filter(|(i, digit_num)| (marks[*i] & (1 << digit_num)) > 0)
-                        .collect();
+                    let cells = conflicts_to_cells(conflicts, marks.as_ref());
 
                     if cells.is_empty() {
                         continue;
@@ -231,31 +238,82 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                             Subset {
                                 positions: positions.into_iter().map(|p| house.cell_at(p).as_index()).collect(),
                                 digits: digits.into_iter().map(|d| d.get() as usize).collect(),
-                                conflict_cells: cells.iter().map(|(i, _)| *i).collect(),
-                                conflict_digits: cells.iter().map(|(_, i)| *i).collect(),
+                                conflict_cells: cells.iter().map(|s| s.cell).collect(),
+                                conflict_digits: cells.iter().map(|s| s.digit).collect(),
                             }
                         )
                         .build()
                         .unwrap();
                 }
-                // sudoku::strategy::Deduction::BasicFish {
-                //     digit,
-                //     lines,
-                //     positions,
-                //     conflicts,
-                // } => todo!(),
-                // sudoku::strategy::Deduction::Fish {
-                //     digit,
-                //     base,
-                //     cover,
-                //     conflicts,
-                // } => todo!(),
-                // sudoku::strategy::Deduction::Wing {
-                //     hinge,
-                //     hinge_digits,
-                //     pincers,
-                //     conflicts,
-                // } => todo!(),
+                sudoku::strategy::Deduction::BasicFish {
+                    digit,
+                    lines,
+                    positions,
+                    conflicts,
+                } => {
+                    let cells = conflicts_to_cells(conflicts, marks.as_ref());
+
+                    if cells.is_empty() {
+                        continue;
+                    }
+
+                    let trans_positions: Vec<usize> = lines
+                        .into_iter()
+                        .zip(positions.into_iter())
+                        .map(|(line, pos)| line.cell_at(pos).as_index())
+                        .collect();
+
+                    let is_row = match lines.into_iter().next().unwrap().categorize() {
+                        LineType::Row(_) => true,
+                        LineType::Col(_) => false
+                    };
+
+                    return TipBuilder::default()
+                        .strategy(strategy_to_name(deduction.strategy()))
+                        .fish(Fish {
+                            is_row,
+                            digit: digit.get() as usize,
+                            positions: trans_positions,
+                            conflict_cells: cells.iter().map(|s| s.cell).collect(),
+                            conflict_digits: cells.iter().map(|s| s.digit).collect(),
+                        })
+                        .build()
+                        .unwrap();
+                }
+                sudoku::strategy::Deduction::Fish {
+                    digit,
+                    base,
+                    conflicts,
+                    ..
+                } => {
+                    let cells = conflicts_to_cells(conflicts, marks.as_ref());
+
+                    if cells.is_empty() {
+                        continue;
+                    }
+                    let trans_positions: Vec<usize> = base
+                        .into_iter()
+                        .flat_map(|b| b.cells().into_iter().map(|c| c.get() as usize))
+                        .collect();
+
+                    let is_row = match base.into_iter().next().unwrap().categorize() {
+                        HouseType::Row(_) => true,
+                        HouseType::Col(_) => false,
+                        HouseType::Block(_) => unreachable!(),
+                    };
+
+                    return TipBuilder::default()
+                        .strategy(strategy_to_name(deduction.strategy()))
+                        .fish(Fish {
+                            is_row,
+                            digit: digit.get() as usize,
+                            positions: trans_positions,
+                            conflict_cells: cells.iter().map(|s| s.cell).collect(),
+                            conflict_digits: cells.iter().map(|s| s.digit).collect(),
+                        })
+                        .build()
+                        .unwrap();
+                },
                 _ => break,
             }
         }
@@ -295,4 +353,17 @@ fn strategy_to_name(strategy: Strategy) -> String {
         AvoidableRectangles => "AvoidableRectangles",
         _ => "Unknown"
     }.into()
+}
+
+struct Solu {
+    cell: usize,
+    digit: usize,
+}
+
+fn conflicts_to_cells(conflicts: &[Candidate], marks: &Vec<i32>) -> Vec<Solu> {
+    conflicts
+        .into_iter()
+        .map(|c| Solu { cell: c.cell.as_index(), digit: c.digit.get() as usize })
+        .filter(|s| (marks[s.cell] & (1 << s.digit)) > 0)
+        .collect()
 }
