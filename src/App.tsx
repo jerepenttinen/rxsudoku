@@ -6,7 +6,11 @@ import UndoButton from "./components/UndoButton";
 import Timer from "./components/Timer";
 import WinAlert from "./components/WinAlert";
 import ResetGameButton from "./components/ResetGameButton";
-import BrainButton from "./components/BrainButton";
+import {
+  BrainButton,
+  LightBulbButton,
+  StrategyAlerts,
+} from "./components/BrainUsers";
 
 function App() {
   return (
@@ -16,6 +20,7 @@ function App() {
           <div class="flex flex-1 gap-4">
             <UndoButton />
             <BrainButton />
+            <LightBulbButton />
           </div>
           <div class="flex flex-1 justify-center">
             <Timer />
@@ -28,6 +33,7 @@ function App() {
         <Board />
         <ActionButtons />
         <WinAlert />
+        <StrategyAlerts />
       </div>
     </div>
   );
