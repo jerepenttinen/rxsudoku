@@ -87,11 +87,11 @@ function ActionButtons() {
                 showRing(num)
                   ? {
                       "z-10 ring-2 dark:text-white": true,
-                      "border-blue-200 bg-blue-300 ring-blue-700 hover:bg-blue-100 dark:border-blue-600 dark:bg-blue-700 dark:text-blue-200 dark:ring-blue-500  dark:hover:bg-blue-600 dark:hover:text-blue-100":
+                      "border-blue-200 bg-blue-400 ring-blue-700 hover:bg-blue-300 dark:border-blue-600 dark:bg-blue-700 dark:text-blue-200 dark:ring-blue-500  dark:hover:bg-blue-600 dark:hover:text-blue-100":
                         action().color === "blue",
-                      "border-red-200 bg-red-300 ring-red-700 hover:bg-red-100 dark:border-red-600 dark:bg-red-700 dark:text-red-200 dark:ring-red-500  dark:hover:bg-red-600 dark:hover:text-red-100":
+                      "border-red-200 bg-red-400 ring-red-700 hover:bg-red-300 dark:border-red-600 dark:bg-red-700 dark:text-red-200 dark:ring-red-500  dark:hover:bg-red-600 dark:hover:text-red-100":
                         action().color === "red",
-                      "border-purple-200 bg-purple-300 ring-purple-700 hover:bg-purple-100 dark:border-purple-600 dark:bg-purple-700 dark:text-purple-200 dark:ring-purple-500  dark:hover:bg-purple-600 dark:hover:text-purple-100":
+                      "border-purple-200 bg-purple-400 ring-purple-700 hover:bg-purple-300 dark:border-purple-600 dark:bg-purple-700 dark:text-purple-200 dark:ring-purple-500  dark:hover:bg-purple-600 dark:hover:text-purple-100":
                         action().color === "purple",
                     }
                   : "border-gray-200 bg-white text-gray-900 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 dark:hover:text-white",
@@ -123,11 +123,11 @@ function ActionButtons() {
                     act.color === "purple",
                 },
                 {
-                  "border-blue-200 bg-blue-300 ring-blue-700 hover:bg-blue-100 dark:border-blue-600 dark:bg-blue-700 dark:text-blue-200 dark:hover:bg-blue-600 dark:hover:text-blue-100":
+                  "border-blue-200 bg-blue-400 ring-blue-700 hover:bg-blue-300 dark:border-blue-600 dark:bg-blue-700 dark:text-blue-200 dark:hover:bg-blue-600 dark:hover:text-blue-100":
                     act.color === "blue",
-                  "border-red-200 bg-red-300 ring-red-700 hover:bg-red-100 dark:border-red-600 dark:bg-red-700 dark:text-red-200 dark:hover:bg-red-600 dark:hover:text-red-100":
+                  "border-red-200 bg-red-400 ring-red-700 hover:bg-red-300 dark:border-red-600 dark:bg-red-700 dark:text-red-200 dark:hover:bg-red-600 dark:hover:text-red-100":
                     act.color === "red",
-                  "border-purple-200 bg-purple-300 ring-purple-700 hover:bg-purple-100 dark:border-purple-600 dark:bg-purple-700 dark:text-purple-200 dark:hover:bg-purple-600 dark:hover:text-purple-100":
+                  "border-purple-200 bg-purple-400 ring-purple-700 hover:bg-purple-300 dark:border-purple-600 dark:bg-purple-700 dark:text-purple-200 dark:hover:bg-purple-600 dark:hover:text-purple-100":
                     act.color === "purple",
                 },
               )}
