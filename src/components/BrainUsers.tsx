@@ -41,13 +41,13 @@ export function BrainButton() {
               digit: data.digit,
             });
 
-            notifications.create(`Put ${data.digit} here`);
+            notifications.create(`Put ${data.digit} here (${tip.strategy})`);
             break;
           }
           case "LockedCandidates": {
             const data = tip.locked_candidate!;
             const cells = toCellName(data.conflict_cells);
-            console.log(data.digit, cells);
+            console.log(tip.strategy, data.digit, cells);
 
             sudoku.send({
               type: "HIGHLIGHTMARKS",

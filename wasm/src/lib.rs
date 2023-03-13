@@ -7,8 +7,8 @@ use wasm_bindgen::prelude::*;
 
 use anyhow::anyhow;
 use anyhow::Result;
-use sudoku::board::Candidate;
 use sudoku::board::positions::{CellAt, HouseType, LineType};
+use sudoku::board::Candidate;
 use sudoku::strategy::Strategy;
 use sudoku::strategy::Strategy::*;
 use sudoku::strategy::StrategySolver;
@@ -85,7 +85,9 @@ pub enum Grade {
 }
 
 fn grade_deductions(deductions: Deductions) -> Grade {
-    let strategies: usize = deductions.iter().fold(0, |a, d| a | (1 << d.strategy() as usize));
+    let strategies: usize = deductions
+        .iter()
+        .fold(0, |a, d| a | (1 << d.strategy() as usize));
 
     let has = |s: Strategy| -> bool {
         return (strategies & (1 << (s as usize))) != 0;
@@ -196,6 +198,10 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                 } => {
                     let digit_num = digit.get() as usize;
                     let cells = conflicts_to_cells(conflicts, marks.as_ref());
+                    print!(
+                        "{:#?}",
+                        conflicts.iter().map(|c| c.cell.get()).collect::<Vec<_>>()
+                    );
 
                     if cells.is_empty() {
                         continue;
@@ -224,14 +230,15 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
 
                     return TipBuilder::default()
                         .strategy(strategy_to_name(deduction.strategy()))
-                        .subset(
-                            Subset {
-                                positions: positions.into_iter().map(|p| house.cell_at(p).as_index()).collect(),
-                                digits: digits.into_iter().map(|d| d.get() as usize).collect(),
-                                conflict_cells: cells.iter().map(|s| s.cell).collect(),
-                                conflict_digits: cells.iter().map(|s| s.digit).collect(),
-                            }
-                        )
+                        .subset(Subset {
+                            positions: positions
+                                .into_iter()
+                                .map(|p| house.cell_at(p).as_index())
+                                .collect(),
+                            digits: digits.into_iter().map(|d| d.get() as usize).collect(),
+                            conflict_cells: cells.iter().map(|s| s.cell).collect(),
+                            conflict_digits: cells.iter().map(|s| s.digit).collect(),
+                        })
                         .build()
                         .unwrap();
                 }
@@ -255,7 +262,7 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
 
                     let is_row = match lines.into_iter().next().unwrap().categorize() {
                         LineType::Row(_) => true,
-                        LineType::Col(_) => false
+                        LineType::Col(_) => false,
                     };
 
                     return TipBuilder::default()
@@ -303,14 +310,14 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                         })
                         .build()
                         .unwrap();
-                },
+                }
                 _ => break,
             }
         }
     }
 
-    TipBuilder::default().strategy(
-        if let Ok(solution_exists) = has_solution(grid.as_str()) {
+    TipBuilder::default()
+        .strategy(if let Ok(solution_exists) = has_solution(grid.as_str()) {
             if solution_exists {
                 "Unknown"
             } else {
@@ -318,13 +325,14 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
             }
         } else {
             "Invalid"
-        }
-    ).build().unwrap()
+        })
+        .build()
+        .unwrap()
 }
 
 fn has_solution(grid: &str) -> Result<bool> {
     let sudoku = Sudoku::from_str_line(grid)?;
-     Ok(sudoku.is_uniquely_solvable())
+    Ok(sudoku.is_uniquely_solvable())
 }
 
 fn get_deductions(grid: &str) -> Result<Deductions> {
@@ -336,7 +344,6 @@ fn get_deductions(grid: &str) -> Result<Deductions> {
         Err(anyhow!("Fail!"))
     }
 }
-
 
 fn strategy_to_name(strategy: Strategy) -> String {
     match strategy {
@@ -357,8 +364,9 @@ fn strategy_to_name(strategy: Strategy) -> String {
         MutantSwordfish => "MutantSwordfish",
         MutantJellyfish => "MutantJellyfish",
         AvoidableRectangles => "AvoidableRectangles",
-        _ => "Unknown"
-    }.into()
+        _ => "Unknown",
+    }
+    .into()
 }
 
 struct Solu {
@@ -369,7 +377,10 @@ struct Solu {
 fn conflicts_to_cells(conflicts: &[Candidate], marks: &Vec<i32>) -> Vec<Solu> {
     conflicts
         .into_iter()
-        .map(|c| Solu { cell: c.cell.as_index(), digit: c.digit.get() as usize })
-        .filter(|s| (marks[s.cell] & (1 << s.digit)) > 0)
+        .map(|c| Solu {
+            cell: c.cell.as_index(),
+            digit: c.digit.get() as usize,
+        })
+        .filter(|s| (marks[s.cell] & (1 << (s.digit - 1))) > 0)
         .collect()
 }
