@@ -58,3 +58,22 @@ export function clamp<T extends number | string>(low: T, value: T, high: T) {
     return value;
   }
 }
+
+export function popcnt(n: number): number {
+  let count = 0;
+  while (n !== 0) {
+    count += n & 1;
+    n >>= 1;
+  }
+  return count;
+}
+
+export function ctz32(integer: number): number {
+  integer >>>= 0; // coerce to Uint32
+  if (integer === 0) {
+    // skipping this step would make it return -1
+    return 32;
+  }
+  integer &= -integer; // equivalent to `int = int & (~int + 1)`
+  return 31 - Math.clz32(integer);
+}

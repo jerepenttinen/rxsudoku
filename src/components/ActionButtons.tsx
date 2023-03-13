@@ -2,6 +2,7 @@ import { For, createSignal } from "solid-js";
 import { sudoku } from "../sudoku";
 import clsx from "clsx";
 import { RadioGroup, RadioGroupOption } from "solid-headless";
+import { getDigit, isClue, isMarked } from "../generator/digit";
 
 const actions = [
   {
@@ -24,7 +25,6 @@ function ActionButtons() {
   const [action, setAction] = createSignal<Action>(actions[0]);
 
   function handleAction(num: number) {
-    console.log(action(), num);
     switch (action().name) {
       case "Highlight":
         if (context.highlight === num) {
@@ -37,7 +37,7 @@ function ActionButtons() {
         sudoku.send({ type: "TOGGLEMARK", cell: context.cursor, mark: num });
         break;
       case "Set":
-        if (context.grid.cells[context.cursor].digit === num) {
+        if (getDigit(context.grid[context.cursor]) === num) {
           sudoku.send({ type: "SETCELL", cell: context.cursor, digit: 0 });
         } else {
           sudoku.send({ type: "SETCELL", cell: context.cursor, digit: num });
@@ -52,13 +52,13 @@ function ActionButtons() {
         return context.highlight === num;
       case "Mark":
         return (
-          context.grid.cells[context.cursor].digit === 0 &&
-          context.grid.cells[context.cursor].marks[num]
+          getDigit(context.grid[context.cursor]) === 0 &&
+          isMarked(context.grid[context.cursor], num)
         );
       case "Set":
         return (
-          !context.grid.prefilled.has(context.cursor) &&
-          context.grid.cells[context.cursor].digit === num
+          !isClue(context.grid[context.cursor]) &&
+          getDigit(context.grid[context.cursor]) === num
         );
     }
   }
@@ -68,9 +68,9 @@ function ActionButtons() {
       case "Highlight":
         return false;
       case "Mark":
-        return context.grid.cells[context.cursor].digit !== 0;
+        return getDigit(context.grid[context.cursor]) === 0;
       case "Set":
-        return context.grid.prefilled.has(context.cursor);
+        return isClue(context.grid[context.cursor]);
     }
   }
 

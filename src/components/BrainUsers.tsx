@@ -50,7 +50,7 @@ export function BrainButton() {
             console.log(data.digit, cells);
 
             sudoku.send({
-              type: "TOGGLEMARKS",
+              type: "HIGHLIGHTMARKS",
               marks: cells.map((cell) => ({
                 cell,
                 mark: data.digit,
@@ -81,7 +81,7 @@ export function BrainButton() {
               };
             }
             sudoku.send({
-              type: "TOGGLEMARKS",
+              type: "HIGHLIGHTMARKS",
               marks,
             });
 
@@ -115,7 +115,7 @@ export function BrainButton() {
               };
             }
             sudoku.send({
-              type: "TOGGLEMARKS",
+              type: "HIGHLIGHTMARKS",
               marks,
             });
 
@@ -136,24 +136,6 @@ export function BrainButton() {
       }}
     >
       🧠
-    </button>
-  );
-}
-
-export function LightBulbButton() {
-  const { context } = sudoku.state;
-  return (
-    <button
-      class="inline-flex h-10 items-center rounded-lg bg-blue-700 px-4 py-2.5 text-center text-lg font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 disabled:dark:bg-gray-500"
-      onClick={() => {
-        const tip = give_tip(
-          toStringLine(context.grid),
-          new Int32Array(toMarksBitsets(context.grid)),
-        );
-        notifications.create(tip.strategy);
-      }}
-    >
-      💡
     </button>
   );
 }

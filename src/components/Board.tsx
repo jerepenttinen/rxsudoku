@@ -1,11 +1,12 @@
-import { For, Show } from "solid-js";
+import { For, Show, createEffect } from "solid-js";
 import { sudoku } from "../sudoku";
 import clsx from "clsx";
+import { getDigit, isClue, isMarked } from "../generator/digit";
 
 function Mark({ cell, number }: { cell: string; number: number }) {
   const { context } = sudoku.state;
 
-  const showMark = () => context.grid.cells[cell].marks[number];
+  const showMark = () => isMarked(context.grid[cell], number);
 
   const handleClick = () =>
     sudoku.send({ type: "TOGGLEMARK", cell, mark: number });
@@ -13,8 +14,8 @@ function Mark({ cell, number }: { cell: string; number: number }) {
   const handleDoubleClick = () =>
     sudoku.send({ type: "SETCELL", cell, digit: number });
 
-  const highlighted = () =>
-    context.grid.cells[cell].marks[context.highlight] ?? false;
+  const highlighted = () => false;
+  // isMarked(context.grid[cell], context.highlight) ?? false;
 
   return (
     <div class="relative">
@@ -62,10 +63,11 @@ function Cell({ cell }: { cell: string }) {
 
   const isCurrent = () => context.cursor === cell;
 
-  const digit = () => context.grid.cells[cell].digit;
-  const prefilled = () => context.grid.prefilled.has(cell);
+  const digit = () => getDigit(context.grid[cell]);
+
+  const clue = () => isClue(context.grid[cell]);
   const highlighted = () =>
-    context.grid.cells[cell].marks[context.highlight] ?? false;
+    isMarked(context.grid[cell], context.highlight) ?? false;
 
   return (
     <div
@@ -98,8 +100,8 @@ function Cell({ cell }: { cell: string }) {
           class={clsx(
             "animate-appear pointer-events-none select-none text-[5.5vw] motion-reduce:animate-none md:text-4xl",
             {
-              "text-gray-900 dark:text-white": prefilled(),
-              "text-blue-500 dark:text-blue-400": !prefilled(),
+              "text-gray-900 dark:text-white": clue(),
+              "text-blue-500 dark:text-blue-400": !clue(),
             },
           )}
         >

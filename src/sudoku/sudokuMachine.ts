@@ -9,6 +9,15 @@ import {
 import constants from "../generator/constants";
 import { nextCell, nextCellBySubgrid } from "./movements";
 import { generate_grid_of_grade, is_win } from "./aivot";
+import { ctz32, popcnt } from "../generator/utils";
+import {
+  getDigit,
+  getMarks,
+  isClue,
+  isMarked,
+  setDigit,
+  toggleMark,
+} from "../generator/digit";
 
 type SudokuContext = {
   grid: Grid;
@@ -39,7 +48,7 @@ type SudokuEvent =
   | { type: "SETCURSOR"; cell: string }
   | { type: "MOVECURSOR"; direction: Direction; subgrid?: boolean }
   | { type: "TOGGLEMARK"; cell: string; mark: number }
-  | { type: "TOGGLEMARKS"; marks: { cell: string; mark: number }[] }
+  | { type: "HIGHLIGHTMARKS"; marks: { cell: string; mark: number }[] }
   | { type: "SETCELL"; cell: string; digit: number };
 
 const { send, cancel } = actions;
@@ -81,11 +90,11 @@ export const sudokuMachine =
                   actions: ["cancelSlamming", "addToPast", "toggleMark"],
                 },
 
-                TOGGLEMARKS: {
-                  cond: "isValidToggleMarks",
+                HIGHLIGHTMARKS: {
+                  cond: "isValidHighlightMarks",
                   target: "waitinteraction",
                   internal: false,
-                  actions: ["cancelSlamming", "addToPast", "toggleMarks"],
+                  actions: ["cancelSlamming", "highlightMarks"],
                 },
 
                 RESETGAME: {
@@ -200,21 +209,16 @@ export const sudokuMachine =
               const cursorCol = row.charCodeAt(0) - ACharCode + 1;
 
               for (const cellPos of constants.CELLS) {
-                const cell = context.grid.cells[cellPos];
-                if (context.grid.prefilled.has(cellPos)) {
+                const cell = context.grid[cellPos];
+                if (isClue(cell)) {
                   continue;
                 }
 
-                if (cell.digit !== 0) {
+                if (getDigit(cell) !== 0) {
                   continue;
                 }
 
-                let count = 0;
-                for (let i = 1; i <= 9; i++) {
-                  if (cell.marks[i]) {
-                    count++;
-                  }
-                }
+                let count = popcnt(getMarks(cell));
 
                 if (count === 1) {
                   const [row, col] = cellPos.split("");
@@ -237,15 +241,10 @@ export const sudokuMachine =
                 return;
               }
 
-              const chosenCell = context.grid.cells[chosen.position];
+              const chosenCell = context.grid[chosen.position];
 
-              let mark = 0;
-              for (let i = 1; i <= 9; i++) {
-                if (chosenCell.marks[i]) {
-                  mark = i;
-                  break;
-                }
-              }
+              let mark = ctz32(getMarks(chosenCell)) + 1;
+
               callback({ type: "SETCELL", cell: chosen.position, digit: mark });
             });
           },
@@ -261,14 +260,11 @@ export const sudokuMachine =
             if (event.type !== "SETCELL") {
               throw Error(`setCell called by ${event.type}`);
             }
-            const cells = structuredClone(context.grid.cells);
 
-            cells[event.cell].digit = event.digit;
+            const grid = structuredClone(context.grid);
+            grid[event.cell] = setDigit(grid[event.cell], event.digit);
 
-            return {
-              ...context.grid,
-              cells,
-            };
+            return grid;
           },
         }),
         toggleMark: assign({
@@ -277,32 +273,19 @@ export const sudokuMachine =
               throw Error(`toggleMark called by ${event.type}`);
             }
 
-            const cells = structuredClone(context.grid.cells);
-            cells[event.cell].marks[event.mark] =
-              !cells[event.cell].marks[event.mark];
+            const grid = structuredClone(context.grid);
+            grid[event.cell] = toggleMark(grid[event.cell], event.mark);
 
-            return {
-              ...context.grid,
-              cells,
-            };
+            return grid;
           },
         }),
-        toggleMarks: assign({
+        highlightMarks: assign({
           grid: (context, event) => {
-            if (event.type !== "TOGGLEMARKS") {
-              throw Error(`toggleMark called by ${event.type}`);
+            if (event.type !== "HIGHLIGHTMARKS") {
+              throw Error(`highlightMarks called by ${event.type}`);
             }
 
-            const cells = structuredClone(context.grid.cells);
-
-            for (const it of event.marks) {
-              cells[it.cell].marks[it.mark] = !cells[it.cell].marks[it.mark];
-            }
-
-            return {
-              ...context.grid,
-              cells,
-            };
+            return context.grid;
           },
         }),
         eliminateMarks: assign({
@@ -312,13 +295,15 @@ export const sudokuMachine =
             }
 
             const peers = constants.PEERS.get(event.cell)!;
+            const grid = structuredClone(context.grid);
 
-            const newCells = structuredClone(context.grid.cells);
             for (const peer of peers) {
-              newCells[peer].marks[event.digit] = false;
+              if (isMarked(context.grid[peer], event.digit)) {
+                grid[peer] = toggleMark(grid[peer], event.digit);
+              }
             }
 
-            return { ...context.grid, cells: newCells };
+            return grid;
           },
         }),
         setDifficulty: assign({
@@ -416,11 +401,11 @@ export const sudokuMachine =
             return false;
           }
 
-          if (context.grid.prefilled.has(event.cell)) {
+          if (isClue(context.grid[event.cell])) {
             return false;
           }
 
-          const peerDigits = getPeerDigits(context.grid.cells, event.cell);
+          const peerDigits = getPeerDigits(context.grid, event.cell);
           return !peerDigits.has(event.digit);
         },
         isValidSetCursor: (context, event) => {
@@ -430,26 +415,15 @@ export const sudokuMachine =
 
           return constants.CELLS.includes(event.cell);
         },
-        isValidToggleMarks: (context, event) => {
-          if (event.type !== "TOGGLEMARKS") {
-            return false;
-          }
-          for (const it of event.marks) {
-            const peerDigits = getPeerDigits(context.grid.cells, it.cell);
-            if (peerDigits.has(it.mark)) {
-              return false;
-            }
-          }
-          return true;
-        },
         isValidToggleMark: (context, event) => {
           if (event.type !== "TOGGLEMARK") {
             return false;
           }
 
-          const peerDigits = getPeerDigits(context.grid.cells, event.cell);
+          const peerDigits = getPeerDigits(context.grid, event.cell);
           return !peerDigits.has(event.mark);
         },
+        isValidHighlightMarks: (context, event) => true,
         canUndo: (context) => context.past.length > 0,
         canRedo: (context) => context.future.length > 0,
         slamming: () => true,
