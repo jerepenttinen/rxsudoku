@@ -39,8 +39,8 @@ export default function DifficultyDropdown() {
     <Popover defaultOpen={false} class="relative z-10">
       {({ isOpen, setState }) => (
         <>
-          <PopoverButton class="inline-flex h-10 w-24 items-center rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-            <span class="mx-auto">{difficulties[context.difficulty].name}</span>
+          <PopoverButton class="inline-flex h-10 w-full items-center justify-center rounded-lg bg-blue-700 px-4 py-2.5 text-sm text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 md:w-24">
+            {difficulties[context.difficulty].name}
           </PopoverButton>
           <Transition
             show={isOpen()}

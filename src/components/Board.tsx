@@ -60,7 +60,7 @@ function Mark({ cell, number }: { cell: string; number: number }) {
       >
         <span
           class={
-            "pointer-events-none select-none align-top text-[1.8vw] md:text-base"
+            "pointer-events-none select-none align-top text-[2.2vw] md:text-base"
           }
         >
           {number}
