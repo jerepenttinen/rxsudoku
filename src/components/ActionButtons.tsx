@@ -114,7 +114,7 @@ function ActionButtons() {
             <RadioGroupOption
               value={act}
               class={clsx(
-                "flex border-t border-b border-r py-2 text-base font-medium text-gray-900 first:rounded-l-lg last:rounded-r-lg",
+                "flex select-none justify-center border-t border-b border-r py-2 text-base font-medium text-gray-900 first:rounded-l-lg last:rounded-r-lg",
                 action().name === act.name && {
                   "z-10 ring-2": true,
                   "ring-blue-700 dark:ring-blue-500": act.color === "blue",
@@ -132,7 +132,7 @@ function ActionButtons() {
                 },
               )}
             >
-              <span class="mx-auto">{act.name}</span>
+              {act.name}
             </RadioGroupOption>
           )}
         </For>
