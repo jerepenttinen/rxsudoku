@@ -20,7 +20,7 @@ function Mark({ cell, number }: { cell: string; number: number }) {
   const handleDoubleClick = () =>
     sudoku.send({ type: "SETCELL", cell, digit: number });
 
-  const highlighted = () => isMarked(context.grid[cell], number);
+  const highlighted = () => isMarked(context.grid[cell], context.highlight);
 
   const markHighlighted = () => isMarkHighlighted(context.grid[cell], number);
   const markHighlightedAlt = () =>
