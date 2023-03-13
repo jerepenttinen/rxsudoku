@@ -171,7 +171,7 @@ export const sudokuMachine =
         grid: initializeGrid(),
         cursor: "A1",
         timePassed: 0,
-        difficulty: 0,
+        difficulty: Number(localStorage.getItem("difficulty") ?? "0"),
         highlight: 0,
         past: [],
         future: [],
@@ -326,6 +326,7 @@ export const sudokuMachine =
             if (event.type !== "RESETGAME") {
               throw Error(`setDifficulty called by ${event.type}`);
             }
+            localStorage.setItem("difficulty", event.difficulty.toString());
             return event.difficulty;
           },
         }),
