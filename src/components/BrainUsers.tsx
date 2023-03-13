@@ -11,6 +11,7 @@ import {
   useToaster,
 } from "solid-headless";
 import { IoClose } from "solid-icons/io";
+import { megaBrain } from "../generator/utils";
 
 function toCellName(u: Uint32Array) {
   return [...u].map((cell) => constants.CELLS[cell]);
@@ -47,15 +48,33 @@ export function BrainButton() {
           case "LockedCandidates": {
             const data = tip.locked_candidate!;
             const cells = toCellName(data.conflict_cells);
-            console.log(tip.strategy, data.digit, cells);
+            const positions = toCellName(data.positions);
 
             sudoku.send({
               type: "HIGHLIGHTMARKS",
-              marks: cells.map((cell) => ({
+              conflicts: cells.map((cell) => ({
+                cell,
+                mark: data.digit,
+              })),
+              setting: positions.map((cell) => ({
                 cell,
                 mark: data.digit,
               })),
             });
+            sudoku.send({
+              type: "HIGHLIGHT",
+              digit: data.digit,
+            });
+            sudoku.send({
+              type: "SETCURSOR",
+              cell: cells[0],
+            });
+
+            notifications.create(
+              `Eliminate candidate ${data.digit} from cells ${cells.join(
+                ", ",
+              )} (${tip.strategy})`,
+            );
             break;
           }
           case "NakedPairs":
@@ -80,23 +99,45 @@ export function BrainButton() {
                 mark: conflict_digits[i],
               };
             }
+
+            const cells = toCellName(data.positions);
+            const digits = [...data.digits];
+
+            const setting = new Array<{ cell: string; mark: number }>(
+              digits.length * cells.length,
+            );
+            for (let i = 0; i < cells.length; i++) {
+              for (let j = 0; j < digits.length; j++) {
+                setting[i * cells.length + j] = {
+                  cell: cells[i],
+                  mark: digits[j],
+                };
+              }
+            }
             sudoku.send({
               type: "HIGHLIGHTMARKS",
-              marks,
+              conflicts: marks,
+              setting,
+            });
+            sudoku.send({
+              type: "HIGHLIGHT",
+              digit: marks[0].mark,
+            });
+            sudoku.send({
+              type: "SETCURSOR",
+              cell: conflict_cells[0],
             });
 
-            console.log(
-              conflict_cells,
-              conflict_digits,
-              data.digits,
-              toCellName(data.positions),
+            notifications.create(
+              `Eliminate candidates ${marks
+                .map((m) => `${m.cell}: ${m.mark}`)
+                .join(", ")} (${tip.strategy})`,
             );
-            console.log(tip.strategy);
+
             break;
           }
           case "XWing":
-          case "Swordfish":
-          case "Jellyfish": {
+          case "Swordfish": {
             const data = tip.fish!;
 
             const conflict_cells = toCellName(data.conflict_cells);
@@ -114,24 +155,45 @@ export function BrainButton() {
                 mark: conflict_digits[i],
               };
             }
+
+            data.positions = megaBrain(data.positions);
+
+            let cells = toCellName(data.positions);
+
+            const setting = new Array<{ cell: string; mark: number }>(
+              data.positions.length,
+            );
+            for (let i = 0; i < setting.length; i++) {
+              setting[i] = {
+                cell: cells[i],
+                mark: data.digit,
+              };
+            }
+
             sudoku.send({
               type: "HIGHLIGHTMARKS",
-              marks,
+              conflicts: marks,
+              setting,
+            });
+            sudoku.send({
+              type: "HIGHLIGHT",
+              digit: data.digit,
+            });
+            sudoku.send({
+              type: "SETCURSOR",
+              cell: conflict_cells[0],
             });
 
-            // with XWing data.positions are 2 corners of the XWing tl and br
-            console.log(
-              data.is_row,
-              data.digit,
-              toCellName(data.positions),
-              data.conflict_digits,
-              toCellName(data.conflict_cells),
+            notifications.create(
+              `Eliminate candidate ${
+                data.digit
+              } from cells ${conflict_cells.join(", ")} (${tip.strategy})`,
             );
-            console.log(tip.strategy);
+
             break;
           }
           default:
-            console.log(tip.strategy);
+            notifications.create(tip.strategy);
         }
       }}
     >
@@ -212,7 +274,7 @@ export function StrategyAlerts() {
   });
 
   return (
-    <Toaster class="fixed-0 absolute left-0 bottom-0 m-4">
+    <Toaster class="fixed-0 absolute left-0 bottom-0 z-50 m-4">
       <Transition
         show={isOpen()}
         class="relative transition"

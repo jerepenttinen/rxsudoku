@@ -77,3 +77,15 @@ export function ctz32(integer: number): number {
   integer &= -integer; // equivalent to `int = int & (~int + 1)`
   return 31 - Math.clz32(integer);
 }
+
+export function megaBrain(ints: Uint32Array): Uint32Array {
+  const result = new Uint32Array(ints.length * ints.length);
+  for (let j = 0; j < ints.length; j++) {
+    for (let i = 0; i < ints.length; i++) {
+      const delta = Math.abs(ints[i] - ints[j]) % 9;
+      result[i + j * ints.length] =
+        ints[i] % 9 > ints[j] % 9 ? ints[i] - delta : ints[i] + delta;
+    }
+  }
+  return result;
+}

@@ -1,7 +1,13 @@
 import { For, Show, createEffect } from "solid-js";
 import { sudoku } from "../sudoku";
 import clsx from "clsx";
-import { getDigit, isClue, isMarked } from "../generator/digit";
+import {
+  getDigit,
+  isClue,
+  isMarkHighlighted,
+  isMarkHighlightedAlt,
+  isMarked,
+} from "../generator/digit";
 
 function Mark({ cell, number }: { cell: string; number: number }) {
   const { context } = sudoku.state;
@@ -14,8 +20,11 @@ function Mark({ cell, number }: { cell: string; number: number }) {
   const handleDoubleClick = () =>
     sudoku.send({ type: "SETCELL", cell, digit: number });
 
-  const highlighted = () => false;
-  // isMarked(context.grid[cell], context.highlight) ?? false;
+  const highlighted = () => isMarked(context.grid[cell], number);
+
+  const markHighlighted = () => isMarkHighlighted(context.grid[cell], number);
+  const markHighlightedAlt = () =>
+    isMarkHighlightedAlt(context.grid[cell], number);
 
   return (
     <div class="relative">
@@ -31,10 +40,14 @@ function Mark({ cell, number }: { cell: string; number: number }) {
             "text-transparent": !showMark(),
           },
           showMark()
-            ? {
-                "text-blue-800 dark:text-blue-200": highlighted(),
-                "text-gray-700 dark:text-gray-300": !highlighted(),
-              }
+            ? markHighlighted()
+              ? "text-red-800 dark:text-red-400"
+              : markHighlightedAlt()
+              ? "text-green-800 dark:text-green-400"
+              : {
+                  "text-blue-800 dark:text-blue-200": highlighted(),
+                  "text-gray-700 dark:text-gray-300": !highlighted(),
+                }
             : {
                 "hover:text-blue-800/60 dark:hover:text-blue-200/60":
                   highlighted(),

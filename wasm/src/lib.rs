@@ -120,6 +120,7 @@ pub fn is_win(grid: String) -> bool {
 #[derive(Clone)]
 pub struct LockedCandidate {
     pub digit: usize,
+    pub positions: Vec<usize>,
     pub conflict_cells: Vec<usize>,
 }
 
@@ -194,14 +195,15 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                         .unwrap();
                 }
                 sudoku::strategy::Deduction::LockedCandidates {
-                    digit, conflicts, ..
+                    digit,
+                    conflicts,
+                    miniline,
+                    ..
                 } => {
                     let digit_num = digit.get() as usize;
                     let cells = conflicts_to_cells(conflicts, marks.as_ref());
-                    print!(
-                        "{:#?}",
-                        conflicts.iter().map(|c| c.cell.get()).collect::<Vec<_>>()
-                    );
+                    let positions: Vec<usize> =
+                        miniline.cells().into_iter().map(|m| m.as_index()).collect();
 
                     if cells.is_empty() {
                         continue;
@@ -211,6 +213,7 @@ pub fn give_tip(grid: String, marks: Vec<i32>) -> Tip {
                         .locked_candidate(LockedCandidate {
                             digit: digit_num,
                             conflict_cells: cells.iter().map(|s| s.cell).collect(),
+                            positions,
                         })
                         .build()
                         .unwrap();

@@ -1,8 +1,9 @@
 /**
  * Bottom 4 bits: digit
  * Bit 5: whether it's a clue
- * Bit 6-14: marks
- * Bit 15-23: mark highlights
+ * Bits 6-14: marks
+ * Bits 15-23: mark highlight remove
+ * Bits 24-32: mark highlight remove
  */
 const digitMask = 0b1111;
 const markMask = 0b111_111_111;
@@ -58,4 +59,16 @@ export function isMarkHighlighted(cell: Cell, mark: number): boolean {
 
 export function toggleMarkHighlight(cell: Cell, mark: number): Cell {
   return cell ^ (1 << (mark - 1 + 14));
+}
+
+export function isMarkHighlightedAlt(cell: Cell, mark: number): boolean {
+  return ((cell >> 23) & (1 << (mark - 1))) != 0;
+}
+
+export function toggleMarkHighlightAlt(cell: Cell, mark: number): Cell {
+  return cell ^ (1 << (mark - 1 + 23));
+}
+
+export function removeHighlights(cell: Cell): Cell {
+  return cell & 0b111111111_1_1111;
 }

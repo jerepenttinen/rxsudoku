@@ -14,9 +14,14 @@ import {
   getDigit,
   getMarks,
   isClue,
+  isMarkHighlighted,
+  isMarkHighlightedAlt,
   isMarked,
+  removeHighlights,
   setDigit,
   toggleMark,
+  toggleMarkHighlight,
+  toggleMarkHighlightAlt,
 } from "../generator/digit";
 
 type SudokuContext = {
@@ -48,7 +53,11 @@ type SudokuEvent =
   | { type: "SETCURSOR"; cell: string }
   | { type: "MOVECURSOR"; direction: Direction; subgrid?: boolean }
   | { type: "TOGGLEMARK"; cell: string; mark: number }
-  | { type: "HIGHLIGHTMARKS"; marks: { cell: string; mark: number }[] }
+  | {
+      type: "HIGHLIGHTMARKS";
+      conflicts: { cell: string; mark: number }[];
+      setting: { cell: string; mark: number }[];
+    }
   | { type: "SETCELL"; cell: string; digit: number };
 
 const { send, cancel } = actions;
@@ -87,19 +96,32 @@ export const sudokuMachine =
                   cond: "isValidToggleMark",
                   target: "waitinteraction",
                   internal: false,
-                  actions: ["cancelSlamming", "addToPast", "toggleMark"],
+                  actions: [
+                    "cancelSlamming",
+                    "addToPast",
+                    "removeHighlights",
+                    "toggleMark",
+                  ],
                 },
 
                 HIGHLIGHTMARKS: {
                   cond: "isValidHighlightMarks",
                   target: "waitinteraction",
                   internal: false,
-                  actions: ["cancelSlamming", "highlightMarks"],
+                  actions: [
+                    "cancelSlamming",
+                    "removeHighlights",
+                    "highlightMarks",
+                  ],
                 },
 
                 RESETGAME: {
                   target: "#SudokuMachine.playing",
-                  actions: ["cancelSlamming", "setDifficulty"],
+                  actions: [
+                    "cancelSlamming",
+                    "removeHighlights",
+                    "setDifficulty",
+                  ],
                 },
 
                 SETCELL: {
@@ -108,6 +130,7 @@ export const sudokuMachine =
                   actions: [
                     "cancelSlamming",
                     "addToPast",
+                    "removeHighlights",
                     "setCell",
                     "eliminateMarks",
                   ],
@@ -279,13 +302,36 @@ export const sudokuMachine =
             return grid;
           },
         }),
+        removeHighlights: assign({
+          grid: (context) => {
+            const grid = structuredClone(context.grid);
+            for (const cell of constants.CELLS) {
+              grid[cell] = removeHighlights(grid[cell]);
+            }
+            return grid;
+          },
+        }),
         highlightMarks: assign({
           grid: (context, event) => {
             if (event.type !== "HIGHLIGHTMARKS") {
               throw Error(`highlightMarks called by ${event.type}`);
             }
 
-            return context.grid;
+            const grid = structuredClone(context.grid);
+
+            for (const it of event.conflicts) {
+              if (!isMarkHighlighted(grid[it.cell], it.mark)) {
+                grid[it.cell] = toggleMarkHighlight(grid[it.cell], it.mark);
+              }
+            }
+
+            for (const it of event.setting) {
+              if (!isMarkHighlightedAlt(grid[it.cell], it.mark)) {
+                grid[it.cell] = toggleMarkHighlightAlt(grid[it.cell], it.mark);
+              }
+            }
+
+            return grid;
           },
         }),
         eliminateMarks: assign({
