@@ -34,6 +34,7 @@ function ActionButtons() {
         }
         break;
       case "Mark":
+        console.log("togglemark", context.cursor, num);
         sudoku.send({ type: "TOGGLEMARK", cell: context.cursor, mark: num });
         break;
       case "Set":
@@ -68,7 +69,7 @@ function ActionButtons() {
       case "Highlight":
         return false;
       case "Mark":
-        return getDigit(context.grid[context.cursor]) === 0;
+        return getDigit(context.grid[context.cursor]) !== 0;
       case "Set":
         return isClue(context.grid[context.cursor]);
     }
