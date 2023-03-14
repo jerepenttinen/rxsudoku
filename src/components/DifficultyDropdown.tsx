@@ -36,7 +36,7 @@ export default function DifficultyDropdown() {
   const context = sudoku.state.context;
 
   return (
-    <Popover defaultOpen={false} class="relative z-10">
+    <Popover defaultOpen={false} class="relative z-50">
       {({ isOpen, setState }) => (
         <>
           <PopoverButton class="inline-flex h-10 w-full items-center justify-center rounded-lg bg-blue-700 px-4 py-2.5 text-sm text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 md:w-24">
@@ -53,7 +53,7 @@ export default function DifficultyDropdown() {
           >
             <PopoverPanel
               unmount={false}
-              class={`absolute right-0 z-10 mt-3 w-48 divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white shadow dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-700`}
+              class={`absolute right-0 mt-3 w-48 divide-y divide-gray-100 rounded-lg border border-gray-200 bg-white shadow dark:divide-gray-600 dark:border-gray-600 dark:bg-gray-700`}
             >
               <Menu
                 as="ul"
