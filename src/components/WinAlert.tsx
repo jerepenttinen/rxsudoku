@@ -9,13 +9,18 @@ import {
 import { sudoku } from "../sudoku";
 
 export default function WinAlert() {
-  const isOpen = () => sudoku.state.value === "won";
+  // const isOpen = () => sudoku.state.value === "won";
+  const isOpen = () => true;
 
   const close = () => sudoku.send({ type: "NEWGAME" });
 
   return (
     <Transition appear show={isOpen()}>
-      <Dialog isOpen class="fixed inset-0 z-10 overflow-y-auto" onClose={close}>
+      <Dialog
+        isOpen
+        class="fixed inset-x-0 -inset-y-1/4 z-50 overflow-y-auto"
+        onClose={close}
+      >
         <div class="flex min-h-screen items-center justify-center px-4">
           <TransitionChild
             enter="ease-out duration-300"
