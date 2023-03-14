@@ -24,6 +24,10 @@ import {
   toggleMarkHighlightAlt,
 } from "../generator/digit";
 
+const DEFAULT_DELAY = 2000;
+const MINIMUM_DELAY = 500;
+const SLAM_FACTOR = 0.75;
+
 type SudokuContext = {
   grid: Grid;
   cursor: string;
@@ -33,6 +37,7 @@ type SudokuContext = {
   past: Grid[];
   future: Grid[];
   slamRef: any;
+  delay: number;
   timer: {
     started: number;
     current: number;
@@ -58,12 +63,13 @@ type SudokuEvent =
       conflicts: { cell: string; mark: number }[];
       setting: { cell: string; mark: number }[];
     }
-  | { type: "SETCELL"; cell: string; digit: number };
+  | { type: "SETCELL"; cell: string; digit: number }
+  | { type: "SETCELLNO"; cell: string; digit: number };
 
 const { send, cancel } = actions;
 
 export const sudokuMachine =
-  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0ADgDb4CeFUVA7vqQC4VdgBORHhnIBiXAHkAagFEAwgFUASsglKA2gAYAuolA0MsbqRF6QAD0QBGGwE4qtgCwBWAEwBmAGyeA7M4AcAT4ANCCMiK7+nlSOtnG2npquns6Omt4AvhmhaJg4BCQU1PRMLOycPOR8goTCYgAqEgDiTQAyMrgAgkoA0lq6SCAGRnVmlgi2Pv4O7j4us85TtlbuoeEIju7uVK7Omvu2-pPOzt7OWTno2HhEZJS0DMzkrBzGVQJCJmJKMsgy9U1OrgZP0zMNjKZBuMUtFbK4rP4rI45s4rPtVmEIp57P4tu5Uuj-JofD4LiBctcCndio8yq9KtVPiJRH96nIZK1WqDBuDRlDEO5EVREu5XEk4j5NO4kmsIvsYisvElXJNJVZztlyVd8rcig9Ss9ym9GbUviz-ooVGpufpDBDyGNEJNNFQbD4bLNXLsvP5ZQgTtNdvs0o5EVZPP4yRSdYV7iUni8KrwPqbmQoAHIAEQkNqGdr5oHGzicMX8Ysixc8KvhfpSPioJysti2rkcLk8VlcUe1N1jNINieNKbqoh+2dzvK+joQPkmO0c2NOQc0k0ctZcVH8jnDkqiLjLGsueV71P1CaNDOHZoAEgBJJrX1r36-1Cf5qf8jZb4XuZvNqWaG4oZrpiGyHJuzaLD4rg+KK6q2IeWrHlSerxnSSbvDUI7IK0QJviMH6FogSwOAkCFVnsK5zH6YqBpRIZhr4CTdshupxrShokGAhBYGwFCiPh9rTr+0QRp2cLwricR+m40TIikUSHOGUSIdGJ6oRxrBcTxfFiOoVgDLaBGQkRCAicKiLVpJv62LWaIxD4KTFlMXhNu4LGUmx1BsMy6YyAA6oCwKCQWFhOs4VCzhGKJEgukq2aByQ4niBJSkSJJZJq5AYBAcBmGpKGUGC74mWFCAALREn65XIg2US+NKZbIu4oYeTGp5oc8xXGQ6n7SlYDjpPCmihgE+yAX6v4OIqLhwt4XheqpPaFf2570smWGEXmPXTikLpuh60HehGfrbi640jSNjFRW16nsQOVDabxFDdUJfWxINVZoqNRL7M4k0ltuvhois-h+J4LW3St7ClZOpXjOVoo0ZoA24lsqWCsSpKZUAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QGUCuED2BrVBZAhgMYAWAlgHZgB0ADgDb4CeFUVA7vqQC4VdgBORHhnIBiXAHkAagFEAwgFUASsglKA2gAYAuolA0MsbqRF6QAD0QBGGwE4qtgCwBWAEwBmAGyeA7M4AcAT4ANCCMiK7+nlSOtnG2npquns6Omt4AvhmhaJg4BCQU1PRMLOycPOR8goTCYgAqEgDiTQAyMrgAgkoA0lq6SCAGRnVmlgi2Pv4O7j4us85TtlbuoeEIju7uVK7Omvu2-pPOzt7OWTno2HhEZJS0DMzkrBzGVQJCJmIAEgCSTd9Wv9vvUur1kP0zMNjKZBuMrK5dg4fIjXJNNI4pqc1tY3FQUl4CbMpj45hcQLlrgU7sVHmVXpVqp8RKIlDJkDJ6k1OrgZJDBtDRnDEClorZXFZ-FZMS4rPtVmEIp57P4tu5UvL-JpSeTKflbkUHqVnuU3kzal9RBz6nIZK1Wvz9IYYeQxoh3FL8Zp3K4knEfN6kjiEL7NDEVl4kmjSZorOdshSrvrCvcSk8XhVeB8LSzrYoVGpHUNnULQON0VQbD4bLNEc4vP5gydprt9mlHFKrJ5-LqkzcU7TjRmzdm6qIFAA5AAiEiLgq+boQzicMX8vsiy88aIlwZSPioJysti2rkcLk8CN7eX7NKN6dNjNHlrZM7nJYXwoQPkmO0cytOraaJMji7i4VD+I4XYBlELhrvGlzXtShppvSmbvDUY5-ACQIAvUb4jB+ZaIB2jj4u4x7HoGbgkcGsTTEc6qkq4Pg+nGtjwYmiEGqmdImgyWYYZa9S-HIPTCbyGg6FC76wkRCArHicoYqemiqocEHBhKzhkR66ReIsiSnFeVLcYO978ehzJiMgrQ8vhLqLjY6TIp4Haiv4gQBMGAZUHMCTuJKqQpIcVjGcmt4oSaJBgIQWBsBQoj2aWFjugk+JStuEpqbYTbJDEPgpFEIXdikYU3shvGsNFsXxWI6hWAMToEbJKUIOR0Tdgi4pZeROWKggF5hpiKTLlMXhHu4ZVIfcbAshOMgAOrcrySWEa17G+Qk-hzAEGK+EBmnKuBaoat6Wo6uS5AYBAcBmHq5WUNJzWup+AC0WrBq9vrbK2HqOMkpKzEkU2mXeLBPQ5n7uLGDjpBKGKBFq+zOJ9NjaX4Z2nmk7j-ZsIMDmDfFoeayXzi14wpGGVY1iiuwNrRcpUPsbYIzYvgJPjEWVVQ1VxRQEPJeMOP2LYcNyh2u3I8G5GkZBvhyis22nDjnOGrNL1NZDcmvT6mkw6qWynbpF1ZEAA */
   createMachine<SudokuContext, SudokuEvent>(
     {
       predictableActionArguments: true,
@@ -73,18 +79,24 @@ export const sudokuMachine =
           entry: ["generateGrid", "resetTimer"],
           invoke: {
             id: "timerInterval",
-            src: () => (callback) => {
-              const id = setInterval(
-                () => callback({ type: "TICKTIMER" }),
-                1000,
-              );
+            src: () => (send) => {
+              const id = setInterval(() => send({ type: "TICKTIMER" }), 1000);
               return () => clearInterval(id);
             },
           },
 
           states: {
             waitinteraction: {
-              entry: ["startSlamming"],
+              invoke: {
+                src: (context) => (send) => {
+                  const id = setTimeout(
+                    () => send({ type: "SLAM" }),
+                    context.delay,
+                  );
+
+                  return () => clearTimeout(id);
+                },
+              },
               on: {
                 MOVECURSOR: {
                   target: "waitinteraction",
@@ -123,7 +135,17 @@ export const sudokuMachine =
                     "setDifficulty",
                   ],
                 },
-
+                SETCELLNO: {
+                  target: "checkwin",
+                  cond: "isValidSetCell",
+                  actions: [
+                    "addToPast",
+                    "removeHighlights",
+                    "setCell",
+                    "eliminateMarks",
+                  ],
+                  internal: false,
+                },
                 SETCELL: {
                   target: "checkwin",
                   cond: "isValidSetCell",
@@ -208,6 +230,7 @@ export const sudokuMachine =
         past: [],
         future: [],
         slamRef: undefined,
+        delay: DEFAULT_DELAY,
         timer: {
           started: Date.now(),
           current: Date.now(),
@@ -268,8 +291,16 @@ export const sudokuMachine =
 
               let mark = ctz32(getMarks(chosenCell)) + 1;
 
-              callback({ type: "SETCELL", cell: chosen.position, digit: mark });
+              callback({
+                type: "SETCELLNO",
+                cell: chosen.position,
+                digit: mark,
+              });
             });
+            return;
+          },
+          delay: (context) => {
+            return Math.max(context.delay * SLAM_FACTOR, MINIMUM_DELAY);
           },
         }),
         generateGrid: assign({
@@ -280,7 +311,7 @@ export const sudokuMachine =
         }),
         setCell: assign({
           grid: (context, event) => {
-            if (event.type !== "SETCELL") {
+            if (event.type !== "SETCELL" && event.type !== "SETCELLNO") {
               throw Error(`setCell called by ${event.type}`);
             }
 
@@ -336,7 +367,7 @@ export const sudokuMachine =
         }),
         eliminateMarks: assign({
           grid: (context, event) => {
-            if (event.type !== "SETCELL") {
+            if (event.type !== "SETCELL" && event.type !== "SETCELLNO") {
               throw Error(`eliminateMarks called by ${event.type}`);
             }
 
@@ -413,14 +444,9 @@ export const sudokuMachine =
             future: newFuture,
           };
         }),
-        startSlamming: send(
-          { type: "SLAM" },
-          {
-            delay: 2000,
-            id: "slam",
-          },
-        ),
-        cancelSlamming: cancel("slam"),
+        cancelSlamming: assign({
+          delay: (context) => DEFAULT_DELAY,
+        }),
         resetTimer: assign({
           timer: (_) => ({
             started: Date.now(),
@@ -439,7 +465,7 @@ export const sudokuMachine =
           return is_win(toStringLine(context.grid));
         },
         isValidSetCell: (context, event) => {
-          if (event.type !== "SETCELL") {
+          if (event.type !== "SETCELL" && event.type !== "SETCELLNO") {
             return false;
           }
 
