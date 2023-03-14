@@ -9,8 +9,7 @@ import {
 import { sudoku } from "../sudoku";
 
 export default function WinAlert() {
-  // const isOpen = () => sudoku.state.value === "won";
-  const isOpen = () => true;
+  const isOpen = () => sudoku.state.value === "won";
 
   const close = () => sudoku.send({ type: "NEWGAME" });
 
